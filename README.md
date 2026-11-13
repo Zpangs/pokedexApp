@@ -25,6 +25,23 @@ An advanced team builder for both competitive and casual players:
 - Set each Pokémon's moves, abilities, items, natures, EVs and IVs
 - Analyze a team's type coverage and weaknesses
 
+## Tech Stack
+
+- **[Expo](https://expo.dev) + React Native** in TypeScript, targeting Android
+- **Expo Router** for navigation (routes live in `src/app/`)
+- **[PokéAPI](https://pokeapi.co)** as the data source, stored on the device with **SQLite** so the app works offline
+- **[PokeAPI/sprites](https://github.com/PokeAPI/sprites)** for images, shown and cached with `expo-image`
+- **`@smogon/calc`** and **`@pkmn/*`** for the team builder: damage calcs, stat formulas and Showdown team import/export
+
+## Getting Started
+
+```bash
+npm install
+npx expo start
+```
+
+Scan the QR code with the **Expo Go** app on Android to open the app on your phone.
+
 ## Status
 
 🚧 Early development.
