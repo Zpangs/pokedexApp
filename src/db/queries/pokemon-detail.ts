@@ -48,9 +48,13 @@ export type PokemonForm = {
 };
 
 export type EvolutionStage = {
+  /** National Dex number. */
   number: number;
+  /** "Raichu", or a regional form's own name ("Alolan Raichu"). */
   name: string;
+  /** Identifies the stage: the species' default form or a regional form. */
   pokemonId: number;
+  /** The `pokemonId` of the stage it evolves from. */
   evolvesFrom: number | null;
   /** How it evolves from the previous stage, e.g. "Level 36" or "Use Thunder Stone". */
   methods: string[];
@@ -215,10 +219,12 @@ function shortStatName(identifier: string, name: string) {
 }
 
 type EvolutionRow = {
-  id: number;
-  name: string;
-  pokemon_id: number;
-  evolves_from: number | null;
+  from_species: number;
+  to_species: number;
+  /** `pokemon.id` of the form that has to evolve, when the data names one. */
+  from_pokemon: number | null;
+  /** `pokemon.id` of the form it becomes, when the data names one. */
+  to_pokemon: number | null;
   trigger: string | null;
   minimum_level: number | null;
   item: string | null;
@@ -226,6 +232,7 @@ type EvolutionRow = {
   known_move: string | null;
   known_move_type: string | null;
   location: string | null;
+  region: string | null;
   time_of_day: string | null;
   minimum_happiness: number | null;
   minimum_affection: number | null;
@@ -236,50 +243,150 @@ type EvolutionRow = {
   needs_overworld_rain: number | null;
   turn_upside_down: number | null;
   relative_physical_stats: number | null;
+  minimum_damage_taken: number | null;
 };
 
-/** Every species in the chain, in Dex order, with its main evolution method(s). */
-export async function loadEvolutionChain(db: SQLiteDatabase, chainId: number): Promise<EvolutionStage[]> {
-  const rows = await db.getAllAsync<EvolutionRow>(
-    `SELECT s.id, sn.name, p.id AS pokemon_id, s.evolves_from_species_id AS evolves_from,
-            tp.name AS trigger, e.minimum_level, i1.name AS item, i2.name AS held_item,
-            mn.name AS known_move, ktn.name AS known_move_type, ln.name AS location,
-            e.time_of_day, e.minimum_happiness, e.minimum_affection, e.minimum_beauty, e.gender_id,
-            psn.name AS party_species, tsn.name AS trade_species, e.needs_overworld_rain,
-            e.turn_upside_down, e.relative_physical_stats
-     FROM pokemon_species s
-     JOIN pokemon_species_names sn ON sn.pokemon_species_id = s.id
-     JOIN pokemon p ON p.species_id = s.id AND p.is_default = 1
-     LEFT JOIN pokemon_evolution e ON e.evolved_species_id = s.id AND e.is_default = 1
-     LEFT JOIN evolution_trigger_prose tp ON tp.evolution_trigger_id = e.evolution_trigger_id
-     LEFT JOIN item_names i1 ON i1.item_id = e.trigger_item_id
-     LEFT JOIN item_names i2 ON i2.item_id = e.held_item_id
-     LEFT JOIN move_names mn ON mn.move_id = e.known_move_id
-     LEFT JOIN type_names ktn ON ktn.type_id = e.known_move_type_id
-     LEFT JOIN location_names ln ON ln.location_id = e.location_id
-     LEFT JOIN pokemon_species_names psn ON psn.pokemon_species_id = e.party_species_id
-     LEFT JOIN pokemon_species_names tsn ON tsn.pokemon_species_id = e.trade_species_id
-     WHERE s.evolution_chain_id = ?
-     ORDER BY s."order", s.id`,
-    chainId
-  );
+/**
+ * Hand-kept exceptions to how the data marks regional forms (`pokemon.identifier`s):
+ * - `extra`: forms that start their own evolution line without a regional form name.
+ *   White-Striped Basculin is the Hisuian Basculin that evolves into Basculegion.
+ * - `alias`: forms that share another form's line. Zen Mode is a battle form of Galarian
+ *   Darmanitan, so it shows Galarian Darumaka's line.
+ * - `names`: clearer stage names than the data's.
+ */
+const REGIONAL_LINE_EXCEPTIONS = {
+  extra: ['basculin-white-striped'],
+  alias: { 'darmanitan-galar-zen': 'darmanitan-galar-standard' } as Record<string, string>,
+  names: { 'darmanitan-galar-standard': 'Galarian Darmanitan' } as Record<string, string>,
+};
 
+/** Regional form names in the data: "alola", "galar", "galar-standard", "paldea-aqua-breed"… */
+const REGIONAL_FORM = /^(alola|galar|hisui|paldea)(-|$)/;
+
+/**
+ * The evolution line `pokemonId` belongs to. Regional forms have their own lines: Paldean
+ * Wooper evolves into Clodsire and Wooper into Quagsire, so each page shows only its own.
+ * Where a regional form branches off a shared Pokémon (Pikachu into Raichu or Alolan
+ * Raichu), both branches show. Forms outside any line (Megas, Gigantamax) use their
+ * species' default form.
+ */
+export async function loadEvolutionChain(
+  db: SQLiteDatabase,
+  chainId: number,
+  pokemonId: number
+): Promise<{ stages: EvolutionStage[]; current: number }> {
+  const [species, variants, rows] = await Promise.all([
+    db.getAllAsync<{ id: number; name: string; pokemon_id: number }>(
+      `SELECT s.id, sn.name, p.id AS pokemon_id
+       FROM pokemon_species s
+       JOIN pokemon_species_names sn ON sn.pokemon_species_id = s.id
+       JOIN pokemon p ON p.species_id = s.id AND p.is_default = 1
+       WHERE s.evolution_chain_id = ?
+       ORDER BY s."order", s.id`,
+      chainId
+    ),
+    db.getAllAsync<{ id: number; species_id: number; identifier: string; form: string; name: string | null }>(
+      `SELECT p.id, p.species_id, p.identifier, f.form_identifier AS form, fn.pokemon_name AS name
+       FROM pokemon p
+       JOIN pokemon_species s ON s.id = p.species_id
+       JOIN pokemon_forms f ON f.pokemon_id = p.id AND f.is_default = 1
+       LEFT JOIN pokemon_form_names fn ON fn.pokemon_form_id = f.id
+       WHERE s.evolution_chain_id = ? AND p.is_default = 0`,
+      chainId
+    ),
+    db.getAllAsync<EvolutionRow>(
+      `SELECT s.evolves_from_species_id AS from_species, s.id AS to_species,
+              rf.pokemon_id AS from_pokemon, ef.pokemon_id AS to_pokemon,
+              tp.name AS trigger, e.minimum_level, i1.name AS item, i2.name AS held_item,
+              mn.name AS known_move, ktn.name AS known_move_type, ln.name AS location,
+              rn.name AS region, e.time_of_day, e.minimum_happiness, e.minimum_affection,
+              e.minimum_beauty, e.gender_id, psn.name AS party_species, tsn.name AS trade_species,
+              e.needs_overworld_rain, e.turn_upside_down, e.relative_physical_stats,
+              e.minimum_damage_taken
+       FROM pokemon_species s
+       JOIN pokemon_evolution e ON e.evolved_species_id = s.id AND e.is_default = 1
+       LEFT JOIN pokemon_forms rf ON rf.id = e.required_pokemon_form_id
+       LEFT JOIN pokemon_forms ef ON ef.id = e.evolved_pokemon_form_id
+       LEFT JOIN evolution_trigger_prose tp ON tp.evolution_trigger_id = e.evolution_trigger_id
+       LEFT JOIN item_names i1 ON i1.item_id = e.trigger_item_id
+       LEFT JOIN item_names i2 ON i2.item_id = e.held_item_id
+       LEFT JOIN move_names mn ON mn.move_id = e.known_move_id
+       LEFT JOIN type_names ktn ON ktn.type_id = e.known_move_type_id
+       LEFT JOIN location_names ln ON ln.location_id = e.location_id
+       LEFT JOIN region_names rn ON rn.region_id = e.region_id
+       LEFT JOIN pokemon_species_names psn ON psn.pokemon_species_id = e.party_species_id
+       LEFT JOIN pokemon_species_names tsn ON tsn.pokemon_species_id = e.trade_species_id
+       WHERE s.evolution_chain_id = ? AND s.evolves_from_species_id IS NOT NULL
+       ORDER BY e.id`,
+      chainId
+    ),
+  ]);
+
+  const { extra, alias, names } = REGIONAL_LINE_EXCEPTIONS;
+  const idOf = new Map(variants.map((v) => [v.identifier, v.id]));
+
+  // One stage per species' default form, plus one per regional form
   const stages = new Map<number, EvolutionStage>();
-  for (const r of rows) {
-    const stage = stages.get(r.id) ?? {
-      number: r.id,
-      name: r.name,
-      pokemonId: r.pokemon_id,
-      evolvesFrom: r.evolves_from,
+  const defaultOf = new Map<number, number>();
+  for (const s of species) {
+    defaultOf.set(s.id, s.pokemon_id);
+    stages.set(s.pokemon_id, {
+      number: s.id,
+      name: s.name,
+      pokemonId: s.pokemon_id,
+      evolvesFrom: null,
       methods: [],
-    };
-    if (r.evolves_from !== null && r.trigger) {
-      const method = describeEvolution(r);
-      if (!stage.methods.includes(method)) stage.methods.push(method);
-    }
-    stages.set(r.id, stage);
+    });
   }
-  return [...stages.values()];
+  for (const v of variants) {
+    const regional =
+      (REGIONAL_FORM.test(v.form) && !v.form.endsWith('-cap')) || extra.includes(v.identifier);
+    if (!regional || v.identifier in alias) continue;
+    stages.set(v.id, {
+      number: v.species_id,
+      name: names[v.identifier] ?? v.name ?? species.find((s) => s.id === v.species_id)?.name ?? '',
+      pokemonId: v.id,
+      evolvesFrom: null,
+      methods: [],
+    });
+  }
+
+  // A form the data doesn't single out (or that isn't regional) means the default form
+  const stageFor = (pokemon: number | null, speciesId: number) =>
+    pokemon !== null && stages.has(pokemon) ? pokemon : defaultOf.get(speciesId);
+
+  for (const r of rows) {
+    const from = stageFor(r.from_pokemon, r.from_species);
+    const to = stages.get(stageFor(r.to_pokemon, r.to_species) ?? -1);
+    if (from === undefined || !to) continue;
+    to.evolvesFrom = from;
+    const method = describeEvolution(r);
+    if (method && !to.methods.includes(method)) to.methods.push(method);
+  }
+
+  // The stage for this page, then everything connected to it
+  const variant = variants.find((v) => v.id === pokemonId);
+  const target = variant && variant.identifier in alias ? idOf.get(alias[variant.identifier]) : pokemonId;
+  const current =
+    target !== undefined && stages.has(target)
+      ? target
+      : (defaultOf.get(variant?.species_id ?? -1) ?? pokemonId);
+
+  const line = new Set([current]);
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const stage of stages.values()) {
+      if (stage.evolvesFrom === null) continue;
+      // Exactly one end already in the line: pull the other one in
+      if (line.has(stage.pokemonId) !== line.has(stage.evolvesFrom)) {
+        line.add(stage.pokemonId);
+        line.add(stage.evolvesFrom);
+        grew = true;
+      }
+    }
+  }
+
+  return { stages: [...stages.values()].filter((s) => line.has(s.pokemonId)), current };
 }
 
 function describeEvolution(r: EvolutionRow) {
@@ -294,6 +401,7 @@ function describeEvolution(r: EvolutionRow) {
     parts.push(r.trigger);
   }
   if (r.trigger !== 'Level up' && r.minimum_level) parts.push(`from level ${r.minimum_level}`);
+  if (r.minimum_damage_taken) parts.push(`(at least ${r.minimum_damage_taken} HP)`);
   if (r.held_item) parts.push(`holding ${r.held_item}`);
   if (r.minimum_happiness) parts.push('with high friendship');
   if (r.minimum_affection) parts.push('with high affection');
@@ -301,6 +409,7 @@ function describeEvolution(r: EvolutionRow) {
   if (r.known_move) parts.push(`knowing ${r.known_move}`);
   if (r.known_move_type) parts.push(`knowing a ${r.known_move_type} move`);
   if (r.location) parts.push(`at ${r.location}`);
+  if (r.region) parts.push(`in ${r.region}`);
   if (r.time_of_day) parts.push(r.time_of_day === 'day' ? 'during the day' : `at ${r.time_of_day}`);
   if (r.gender_id === 1) parts.push('(female)');
   if (r.gender_id === 2) parts.push('(male)');

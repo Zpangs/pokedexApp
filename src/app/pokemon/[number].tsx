@@ -56,7 +56,7 @@ export default function PokemonScreen() {
   const [species, setSpecies] = useState<SpeciesInfo | null | undefined>(undefined);
   const [pokemonId, setPokemonId] = useState<number | null>(null);
   const [form, setForm] = useState<PokemonForm | null>(null);
-  const [chain, setChain] = useState<EvolutionStage[]>([]);
+  const [chain, setChain] = useState<{ stages: EvolutionStage[]; current: number } | null>(null);
   const [encounters, setEncounters] = useState<Encounter[]>([]);
   const [games, setGames] = useState<GameOption[]>([]);
   const [game, setGame] = useState<number | null>(null);
@@ -66,21 +66,28 @@ export default function PokemonScreen() {
 
   useEffect(() => {
     let live = true;
-    loadSpecies(db, number).then(async (s) => {
+    loadSpecies(db, number).then((s) => {
       if (!live) return;
       setSpecies(s);
       if (!s) return;
       const requested = s.varieties.find((v) => v.pokemonId === Number(formParam));
       setPokemonId((requested ?? s.varieties[0])?.pokemonId ?? null);
-      if (s.evolutionChainId !== null) {
-        const c = await loadEvolutionChain(db, s.evolutionChainId);
-        if (live) setChain(c);
-      }
     });
     return () => {
       live = false;
     };
   }, [db, number, formParam]);
+
+  // Regional forms have their own evolution lines (Paldean Wooper into Clodsire)
+  const chainId = species?.evolutionChainId ?? null;
+  useEffect(() => {
+    if (chainId === null || pokemonId === null) return;
+    let live = true;
+    loadEvolutionChain(db, chainId, pokemonId).then((c) => live && setChain(c));
+    return () => {
+      live = false;
+    };
+  }, [db, chainId, pokemonId]);
 
   // Everything that differs between forms (Mega, regional, Gigantamax…)
   useEffect(() => {
@@ -176,7 +183,11 @@ export default function PokemonScreen() {
           <StatsSection key="b-stats" stats={stats} />,
 
           <SectionSign key="s-evo" title="Evolution" />,
-          <EvolutionSection key="b-evo" chain={chain} current={number} />,
+          <EvolutionSection
+            key="b-evo"
+            stages={chain?.stages ?? []}
+            current={chain?.current ?? null}
+          />,
 
           <SectionSign
             key="s-loc"

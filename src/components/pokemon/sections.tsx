@@ -149,7 +149,13 @@ export function StatsSection({ stats }: { stats: Stat[] }) {
 
 /* ---------- Evolution ---------- */
 
-export function EvolutionSection({ chain, current }: { chain: EvolutionStage[]; current: number }) {
+type EvolutionProps = {
+  stages: EvolutionStage[];
+  /** The `pokemonId` of this page's stage. */
+  current: number | null;
+};
+
+export function EvolutionSection({ stages: chain, current }: EvolutionProps) {
   const theme = useTheme();
   if (chain.length <= 1) {
     return (
@@ -164,7 +170,7 @@ export function EvolutionSection({ chain, current }: { chain: EvolutionStage[]; 
   const visit = (from: number | null, depth: number) => {
     for (const stage of chain.filter((s) => s.evolvesFrom === from)) {
       ordered.push({ stage, depth });
-      visit(stage.number, depth + 1);
+      visit(stage.pokemonId, depth + 1);
     }
   };
   visit(null, 0);
@@ -172,12 +178,16 @@ export function EvolutionSection({ chain, current }: { chain: EvolutionStage[]; 
   return (
     <View>
       {ordered.map(({ stage, depth }) => {
-        const isCurrent = stage.number === current;
+        const isCurrent = stage.pokemonId === current;
+        // Regional forms open on that form; default forms share the species id
+        const form = stage.pokemonId === stage.number ? undefined : String(stage.pokemonId);
         return (
           <Pressable
-            key={stage.number}
+            key={stage.pokemonId}
             disabled={isCurrent}
-            onPress={() => router.push(`/pokemon/${stage.number}`)}
+            onPress={() =>
+              router.push({ pathname: '/pokemon/[number]', params: { number: stage.number, form } })
+            }
             android_ripple={{ color: theme.backgroundSelected }}
             style={[
               styles.stage,
