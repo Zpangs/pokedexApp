@@ -7,6 +7,11 @@ import { Font, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Props = {
+  /** "National Dex", "Paldea Dex"… Tapping it opens the Pokédex picker. */
+  title: string;
+  /** The games the dex belongs to, under the title. */
+  games?: string;
+  onPressTitle: () => void;
   query: string;
   onChangeQuery: (query: string) => void;
   /** Undefined while the Dex is still loading. */
@@ -15,7 +20,7 @@ type Props = {
 };
 
 /** The yellow sign band at the top: title, count and the search field. */
-export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
+export function SearchBand({ title, games, onPressTitle, query, onChangeQuery, total, shown }: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const searching = query.trim().length > 0;
@@ -23,9 +28,22 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
   return (
     <SignBand style={[styles.band, { paddingTop: insets.top + Spacing.two }]}>
       <View style={styles.titleRow}>
-        <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
-          National Dex
-        </Text>
+        <Pressable
+          onPress={onPressTitle}
+          style={({ pressed }) => [styles.titleButton, pressed && { opacity: 0.6 }]}
+          hitSlop={{ top: 8, bottom: 8 }}
+          accessibilityRole="button"
+          accessibilityLabel={`${title}${games ? `, ${games}` : ''}`}
+          accessibilityHint="Choose another Pokédex">
+          <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
+            {title}
+          </Text>
+          <SymbolView
+            name={{ ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' }}
+            size={28}
+            tintColor={theme.onSign}
+          />
+        </Pressable>
         {total !== undefined && (
           <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
             {searching
@@ -34,6 +52,11 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
           </Text>
         )}
       </View>
+      {games ? (
+        <Text style={[styles.games, { color: theme.onSign }]} numberOfLines={2}>
+          {games}
+        </Text>
+      ) : null}
 
       <View style={[styles.field, { backgroundColor: theme.field }]}>
         <SymbolView
@@ -82,12 +105,20 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignItems: 'baseline',
+    alignItems: 'center',
     justifyContent: 'space-between',
     columnGap: Spacing.two,
     rowGap: Spacing.one,
   },
+  titleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
+    gap: Spacing.one,
+    minHeight: 44,
+  },
   title: {
+    flexShrink: 1,
     fontFamily: Font.extraBold,
     fontSize: 28,
     lineHeight: 34,
@@ -98,6 +129,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontVariant: ['tabular-nums'],
+  },
+  games: {
+    fontFamily: Font.medium,
+    fontSize: 15,
+    lineHeight: 20,
+    marginTop: -Spacing.one,
   },
   field: {
     flexDirection: 'row',

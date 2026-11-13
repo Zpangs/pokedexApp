@@ -5,6 +5,8 @@ export type DexType = { identifier: string; name: string };
 export type DexEntry = {
   /** National Dex number (`pokemon_species.id`). */
   number: number;
+  /** The number shown in the list: the National number, or the regional one in a regional dex. */
+  dexNumber: number;
   name: string;
   /** Default form's `pokemon.id`, used for sprites. */
   pokemonId: number;
@@ -83,6 +85,7 @@ export async function loadNationalDex(db: SQLiteDatabase) {
 
   const entries: DexEntry[] = rows.map((r) => ({
     number: r.number,
+    dexNumber: r.number,
     name: r.name,
     pokemonId: r.pokemon_id,
     generationId: r.generation_id,
@@ -106,14 +109,14 @@ export async function loadNationalDex(db: SQLiteDatabase) {
 
 /**
  * Matches a search query against an entry. Every word must match:
- * a number matches dex numbers starting with it ("25", "#025"), and a word matches
+ * a number matches list numbers (National or regional) starting with it ("25", "#025"), and a word matches
  * the name (anywhere) or a type (from the start), so "fire fly" finds Charizard.
  */
 export function matchesQuery(entry: DexEntry, words: string[]) {
   return words.every((word) => {
     const digits = word.replace(/^#/, '');
     if (/^\d+$/.test(digits)) {
-      return String(entry.number).startsWith(String(Number(digits)));
+      return String(entry.dexNumber).startsWith(String(Number(digits)));
     }
     return (
       entry.searchName.includes(word) ||
@@ -126,6 +129,7 @@ export function queryWords(query: string) {
   return normalizeForSearch(query).split(/\s+/).filter(Boolean);
 }
 
-export function formatDexNumber(n: number) {
-  return String(n).padStart(4, '0');
+/** National numbers have four digits (0025); regional ones three, as in the games (025). */
+export function formatDexNumber(n: number, digits = 4) {
+  return String(n).padStart(digits, '0');
 }

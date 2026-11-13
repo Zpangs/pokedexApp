@@ -1,4 +1,5 @@
-import { useSQLiteContext } from 'expo-sqlite';
+import { router } from 'expo-router';
+import { type SQLiteDatabase, useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
@@ -15,26 +16,67 @@ import {
   matchesQuery,
   queryWords,
 } from '@/db/queries/national-dex';
+import {
+  loadPokedexes,
+  loadRegionalDex,
+  NATIONAL_DEX_ID,
+  type PokedexOption,
+} from '@/db/queries/pokedexes';
+import { useSelectedDex } from '@/hooks/use-selected-dex';
 import { useTheme } from '@/hooks/use-theme';
 
 type Item =
   | { kind: 'generation'; key: string; generation: DexGeneration; matches?: number }
   | { kind: 'entry'; key: string; entry: DexEntry };
 
-type Dex = Awaited<ReturnType<typeof loadNationalDex>>;
+/** National Dex entries are split into generations; a regional dex is one run in its own order. */
+type Dex = { id: number; entries: DexEntry[]; generations: DexGeneration[] | null };
 
-export default function NationalDexScreen() {
+/** Loaded dexes, so switching back and forth is instant. */
+const loaded = new Map<number, Dex>();
+
+async function loadDex(db: SQLiteDatabase, id: number): Promise<Dex> {
+  const cached = loaded.get(id);
+  if (cached) return cached;
+  const dex: Dex =
+    id === NATIONAL_DEX_ID
+      ? { id, ...(await loadNationalDex(db)) }
+      : { id, entries: await loadRegionalDex(db, id), generations: null };
+  loaded.set(id, dex);
+  return dex;
+}
+
+export default function DexScreen() {
   const db = useSQLiteContext();
   const theme = useTheme();
   const { fontScale } = useWindowDimensions();
-  const [dex, setDex] = useState<Dex | null>(null);
+  const selectedId = useSelectedDex();
+  const [options, setOptions] = useState<PokedexOption[]>([]);
+  const [loadedDex, setDex] = useState<Dex | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
 
   useEffect(() => {
-    loadNationalDex(db).then(setDex, (e: unknown) => setError(String(e)));
+    loadPokedexes(db).then(setOptions, () => {});
   }, [db]);
+
+  useEffect(() => {
+    let live = true;
+    loadDex(db, selectedId).then(
+      (d) => live && setDex(d),
+      (e: unknown) => live && setError(String(e))
+    );
+    return () => {
+      live = false;
+    };
+  }, [db, selectedId]);
+
+  // While another dex loads, show nothing rather than the old one under the new title
+  const dex = loadedDex?.id === selectedId ? loadedDex : null;
+  // An unknown id (a dex removed from the data) falls back to the National Dex's name
+  const option = options.find((o) => o.id === selectedId);
+  const regional = selectedId !== NATIONAL_DEX_ID;
 
   // Fixed heights keep scrolling and jumping cheap. They grow with the system font size:
   // a row holds the name (24) over the badges (16), and a sign holds one line (22).
@@ -48,6 +90,14 @@ export default function NationalDexScreen() {
     const items: Item[] = [];
     const stickyIndices: number[] = [];
     let shown = 0;
+
+    if (dex && !dex.generations) {
+      for (const entry of dex.entries) {
+        if (searching && !matchesQuery(entry, words)) continue;
+        shown += 1;
+        items.push({ kind: 'entry', key: `p-${entry.dexNumber}-${entry.number}`, entry });
+      }
+    }
 
     for (const generation of dex?.generations ?? []) {
       const entries = (dex?.entries ?? []).filter(
@@ -78,6 +128,9 @@ export default function NationalDexScreen() {
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <StatusBar style="light" />
       <SearchBand
+        title={`${regional ? (option?.name ?? '') : 'National'} Dex`}
+        games={regional ? option?.games : undefined}
+        onPressTitle={() => router.push('/dex-picker')}
         query={query}
         onChangeQuery={setQuery}
         total={dex?.entries.length}
@@ -113,7 +166,12 @@ export default function NationalDexScreen() {
                 matches={item.matches}
               />
             ) : (
-              <DexRow entry={item.entry} height={rowHeight} fontScale={fontScale} />
+              <DexRow
+                entry={item.entry}
+                height={rowHeight}
+                fontScale={fontScale}
+                digits={regional ? 3 : 4}
+              />
             )
           }
           getItemLayout={(_, index) => ({

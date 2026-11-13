@@ -12,17 +12,27 @@ import { useTheme } from '@/hooks/use-theme';
 /** The dex number is already display size, so it stops growing before the name does. */
 const NUMBER_MAX_SCALE = 1.3;
 
-type Props = { entry: DexEntry; height: number; fontScale: number };
+type Props = {
+  entry: DexEntry;
+  height: number;
+  fontScale: number;
+  /** 4 for National numbers, 3 for regional ones. */
+  digits?: number;
+};
 
 /** One Pokémon: big dex number, sprite, then the name over its type badges. Opens its page. */
-export const DexRow = memo(function DexRow({ entry, height, fontScale }: Props) {
+export const DexRow = memo(function DexRow({ entry, height, fontScale, digits = 4 }: Props) {
   const theme = useTheme();
   const types = entry.types.map((t) => t.name).join(' and ');
+  // A regional form (Alolan Raichu) opens on that form; default forms share the species id
+  const form = entry.pokemonId === entry.number ? undefined : String(entry.pokemonId);
 
   return (
     // Not <Link asChild>: it drops a style function, and the row loses its layout
     <Pressable
-      onPress={() => router.push(`/pokemon/${entry.number}`)}
+      onPress={() =>
+        router.push({ pathname: '/pokemon/[number]', params: { number: entry.number, form } })
+      }
       style={({ pressed }) => [
         styles.row,
         { height, borderBottomColor: theme.rowRule },
@@ -30,18 +40,18 @@ export const DexRow = memo(function DexRow({ entry, height, fontScale }: Props) 
       ]}
       android_ripple={{ color: theme.backgroundSelected }}
       accessibilityRole="button"
-      accessibilityLabel={`Number ${entry.number}, ${entry.name}, ${types} type`}>
+      accessibilityLabel={`Number ${entry.dexNumber}, ${entry.name}, ${types} type`}>
       <Text
         style={[
           styles.number,
           {
             color: theme.text,
-            minWidth: 72 * Math.min(Math.max(fontScale, 1), NUMBER_MAX_SCALE),
+            minWidth: 18 * digits * Math.min(Math.max(fontScale, 1), NUMBER_MAX_SCALE),
           },
         ]}
         maxFontSizeMultiplier={NUMBER_MAX_SCALE}
         numberOfLines={1}>
-        {formatDexNumber(entry.number)}
+        {formatDexNumber(entry.dexNumber, digits)}
       </Text>
       <Image
         source={sprites.sprite(entry.pokemonId)}

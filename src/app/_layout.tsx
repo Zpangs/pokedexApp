@@ -37,6 +37,7 @@ export default function RootLayout() {
           screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="pokemon/[number]" />
+          <Stack.Screen name="dex-picker" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

@@ -45,7 +45,8 @@ const NOT_A_DEFAULT_GAME = new Set(['Champions']);
 const STICKY_SIGNS = [1, 3, 5, 7, 9, 11, 13];
 
 export default function PokemonScreen() {
-  const { number: param } = useLocalSearchParams<{ number: string }>();
+  // `form` is a `pokemon.id` to open on, e.g. Alolan Raichu from the Alola Dex
+  const { number: param, form: formParam } = useLocalSearchParams<{ number: string; form?: string }>();
   const number = Number(param);
   const db = useSQLiteContext();
   const theme = useTheme();
@@ -69,7 +70,8 @@ export default function PokemonScreen() {
       if (!live) return;
       setSpecies(s);
       if (!s) return;
-      setPokemonId(s.varieties[0]?.pokemonId ?? null);
+      const requested = s.varieties.find((v) => v.pokemonId === Number(formParam));
+      setPokemonId((requested ?? s.varieties[0])?.pokemonId ?? null);
       if (s.evolutionChainId !== null) {
         const c = await loadEvolutionChain(db, s.evolutionChainId);
         if (live) setChain(c);
@@ -78,7 +80,7 @@ export default function PokemonScreen() {
     return () => {
       live = false;
     };
-  }, [db, number]);
+  }, [db, number, formParam]);
 
   // Everything that differs between forms (Mega, regional, Gigantamax…)
   useEffect(() => {
