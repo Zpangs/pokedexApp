@@ -37,6 +37,8 @@ export type Matchup = { type: DexType; multiplier: number };
 
 export type PokemonForm = {
   pokemonId: number;
+  /** The form's own category when it differs from the species' ("Poison Fish Pokémon"). */
+  genus: string | null;
   /** Height in metres and weight in kilograms. */
   height: number;
   weight: number;
@@ -153,9 +155,40 @@ export async function loadSpecies(db: SQLiteDatabase, number: number): Promise<S
   };
 }
 
+/**
+ * Pokédex categories of regional forms that differ from the original's. PokéAPI only has
+ * the species' category, so these are kept by hand (`pokemon.identifier` → category).
+ * Forms not listed keep the species' category; every Alolan form does.
+ */
+const FORM_GENERA: Record<string, string> = {
+  // Galar
+  'ponyta-galar': 'Unique Horn Pokémon',
+  'rapidash-galar': 'Unique Horn Pokémon',
+  'slowking-galar': 'Hexpert Pokémon',
+  'mr-mime-galar': 'Dancing Pokémon',
+  'articuno-galar': 'Cruel Pokémon',
+  'zapdos-galar': 'Strong Legs Pokémon',
+  'moltres-galar': 'Malevolent Pokémon',
+  'darmanitan-galar-standard': 'Zen Charm Pokémon',
+  'darmanitan-galar-zen': 'Zen Charm Pokémon',
+  // Hisui
+  'growlithe-hisui': 'Scout Pokémon',
+  'voltorb-hisui': 'Sphere Pokémon',
+  'electrode-hisui': 'Sphere Pokémon',
+  'typhlosion-hisui': 'Ghost Flame Pokémon',
+  'lilligant-hisui': 'Spinning Pokémon',
+  'zorua-hisui': 'Spiteful Fox Pokémon',
+  'zoroark-hisui': 'Baneful Fox Pokémon',
+  'braviary-hisui': 'Battle Cry Pokémon',
+  'sliggoo-hisui': 'Snail Pokémon',
+  'goodra-hisui': 'Shell Bunker Pokémon',
+  // Paldea
+  'wooper-paldea': 'Poison Fish Pokémon',
+};
+
 export async function loadForm(db: SQLiteDatabase, pokemonId: number): Promise<PokemonForm | null> {
-  const pokemon = await db.getFirstAsync<{ height: number; weight: number }>(
-    'SELECT height, weight FROM pokemon WHERE id = ?',
+  const pokemon = await db.getFirstAsync<{ identifier: string; height: number; weight: number }>(
+    'SELECT identifier, height, weight FROM pokemon WHERE id = ?',
     pokemonId
   );
   if (!pokemon) return null;
@@ -203,6 +236,7 @@ export async function loadForm(db: SQLiteDatabase, pokemonId: number): Promise<P
 
   return {
     pokemonId,
+    genus: FORM_GENERA[pokemon.identifier] ?? null,
     height: pokemon.height / 10,
     weight: pokemon.weight / 10,
     types: types.map(({ identifier, name }) => ({ identifier, name })),

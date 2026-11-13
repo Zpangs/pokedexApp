@@ -164,7 +164,7 @@ export default function PokemonScreen() {
           <IdentityBand
             number={number}
             name={displayName}
-            genus={species?.genus}
+            genus={form?.genus ?? species?.genus}
             types={form?.types}
             pokemonId={pokemonId}
             varieties={species?.varieties ?? []}
