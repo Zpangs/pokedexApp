@@ -133,3 +133,8 @@ export function queryWords(query: string) {
 export function formatDexNumber(n: number, digits = 4) {
   return String(n).padStart(digits, '0');
 }
+
+/** "1 game", "3 games". */
+export function plural(count: number, noun: string) {
+  return `${count.toLocaleString()} ${noun}${count === 1 ? '' : 's'}`;
+}

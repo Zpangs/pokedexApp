@@ -73,6 +73,7 @@ export type Encounter = {
 export type GameOption = { versionGroupId: number; name: string; order: number };
 
 export type LearnedMove = {
+  id: number;
   name: string;
   type: DexType;
   /** "Physical", "Special" or "Status". */
@@ -294,8 +295,13 @@ const REGIONAL_LINE_EXCEPTIONS = {
   names: { 'darmanitan-galar-standard': 'Galarian Darmanitan' } as Record<string, string>,
 };
 
-/** Regional form names in the data: "alola", "galar", "galar-standard", "paldea-aqua-breed"… */
-const REGIONAL_FORM = /^(alola|galar|hisui|paldea)(-|$)/;
+/**
+ * Whether a `pokemon_forms.form_identifier` is a regional form: "alola", "galar-standard",
+ * "paldea-aqua-breed"… but not Pikachu's "alola-cap", which is only named after the region.
+ */
+export function isRegionalForm(form: string | null) {
+  return !!form && /^(alola|galar|hisui|paldea)(-|$)/.test(form) && !form.endsWith('-cap');
+}
 
 /**
  * The evolution line `pokemonId` belongs to. Regional forms have their own lines: Paldean
@@ -374,7 +380,7 @@ export async function loadEvolutionChain(
   }
   for (const v of variants) {
     const regional =
-      (REGIONAL_FORM.test(v.form) && !v.form.endsWith('-cap')) || extra.includes(v.identifier);
+      isRegionalForm(v.form) || extra.includes(v.identifier);
     if (!regional || v.identifier in alias) continue;
     stages.set(v.id, {
       number: v.species_id,
@@ -535,6 +541,7 @@ export async function loadLearnset(
   versionGroupId: number
 ): Promise<LearnedMove[]> {
   const rows = await db.getAllAsync<{
+    id: number;
     name: string;
     type: string;
     type_name: string;
@@ -545,7 +552,7 @@ export async function loadLearnset(
     method: string;
     level: number;
   }>(
-    `SELECT mn.name, t.identifier AS type, tn.name AS type_name, dc.name AS category,
+    `SELECT m.id, mn.name, t.identifier AS type, tn.name AS type_name, dc.name AS category,
             m.power, m.accuracy, m.pp, mp.name AS method, MIN(pm.level) AS level
      FROM pokemon_moves pm
      JOIN moves m ON m.id = pm.move_id
@@ -561,6 +568,7 @@ export async function loadLearnset(
     versionGroupId
   );
   return rows.map((r) => ({
+    id: r.id,
     name: r.name,
     type: { identifier: r.type, name: r.type_name },
     category: r.category[0].toUpperCase() + r.category.slice(1),

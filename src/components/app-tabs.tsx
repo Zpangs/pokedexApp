@@ -22,12 +22,9 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="list.number" md="format_list_numbered" />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="moves">
+        <NativeTabs.Trigger.Label>Moves</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="bolt.fill" md="bolt" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

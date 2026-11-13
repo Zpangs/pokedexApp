@@ -38,6 +38,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="pokemon/[number]" />
           <Stack.Screen name="dex-picker" />
+          <Stack.Screen name="move/[id]" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

@@ -21,7 +21,7 @@ import {
   StatsSection,
 } from '@/components/pokemon/sections';
 import { Font, Spacing } from '@/constants/theme';
-import { formatDexNumber } from '@/db/queries/national-dex';
+import { formatDexNumber, plural } from '@/db/queries/national-dex';
 import {
   type Encounter,
   type EvolutionStage,
@@ -194,7 +194,7 @@ export default function PokemonScreen() {
             title="Where to find"
             detail={
               encounters.length
-                ? `${new Set(encounters.map((e) => e.versionGroupOrder)).size} games`
+                ? plural(new Set(encounters.map((e) => e.versionGroupOrder)).size, 'game')
                 : undefined
             }
           />,

@@ -4,6 +4,7 @@ import { SymbolView } from 'expo-symbols';
 import { type ReactNode, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { MoveRow } from '@/components/moves/move-row';
 import { TypeBadge } from '@/components/type-badge';
 import { Font, Spacing } from '@/constants/theme';
 import { formatDexNumber } from '@/db/queries/national-dex';
@@ -317,7 +318,7 @@ function VersionLocations({ version, list }: { version: string; list: Encounter[
 
 /* ---------- Moves ---------- */
 
-const METHOD_LABELS: Record<string, string> = {
+export const METHOD_LABELS: Record<string, string> = {
   'Level up': 'Level up',
   Machine: 'TM',
   Egg: 'Egg moves',
@@ -386,38 +387,17 @@ export function MovesSection({ moves }: { moves: LearnedMove[] | null }) {
             {METHOD_LABELS[method] ?? method} · {list.length}
           </Text>
           {list.map((m) => (
-            <MoveRow key={`${method}-${m.name}`} move={m} showLevel={method === 'Level up'} />
+            <MoveRow
+              key={`${method}-${m.id}`}
+              move={m}
+              lead={method === 'Level up' ? (m.level > 0 ? String(m.level) : 'Evo') : undefined}
+              leadLabel={
+                method === 'Level up' ? (m.level > 0 ? `Level ${m.level}` : 'On evolution') : undefined
+              }
+            />
           ))}
         </View>
       ))}
-    </View>
-  );
-}
-
-function MoveRow({ move, showLevel }: { move: LearnedMove; showLevel: boolean }) {
-  const theme = useTheme();
-  const facts = [
-    move.category,
-    move.power ? `${move.power} power` : null,
-    move.accuracy ? `${move.accuracy}% accuracy` : null,
-    move.pp ? `${move.pp} PP` : null,
-  ].filter(Boolean);
-
-  return (
-    <View
-      style={[styles.move, { borderBottomColor: theme.rule }]}
-      accessible
-      accessibilityLabel={`${showLevel ? (move.level > 0 ? `Level ${move.level}, ` : 'On evolution, ') : ''}${move.name}, ${move.type.name} type, ${facts.join(', ')}`}>
-      {showLevel && (
-        <Text style={[styles.moveLevel, { color: theme.text }]}>
-          {move.level > 0 ? move.level : 'Evo'}
-        </Text>
-      )}
-      <View style={styles.moveText}>
-        <Text style={[styles.strong, { color: theme.text }]}>{move.name}</Text>
-        <Text style={[styles.moveFacts, { color: theme.textSecondary }]}>{facts.join(' · ')}</Text>
-      </View>
-      <TypeBadge identifier={move.type.identifier} name={move.type.name} />
     </View>
   );
 }
@@ -638,30 +618,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.four,
     paddingBottom: Spacing.one,
-  },
-  move: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    minHeight: 56,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  moveLevel: {
-    width: 32,
-    fontFamily: Font.extraBold,
-    fontSize: 17,
-    lineHeight: 22,
-    fontVariant: ['tabular-nums'],
-  },
-  moveText: {
-    flex: 1,
-  },
-  moveFacts: {
-    fontFamily: Font.regular,
-    fontSize: 13,
-    lineHeight: 18,
   },
   entry: {
     fontFamily: Font.regular,

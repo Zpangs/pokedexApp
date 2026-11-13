@@ -11,7 +11,12 @@ type Props = {
   title: string;
   /** The games the dex belongs to, under the title. */
   games?: string;
-  onPressTitle: () => void;
+  /** Without it, the title is plain text. */
+  onPressTitle?: () => void;
+  /** What's being counted, e.g. "Pokémon" or "moves". */
+  noun?: string;
+  placeholder?: string;
+  searchLabel?: string;
   query: string;
   onChangeQuery: (query: string) => void;
   /** Undefined while the Dex is still loading. */
@@ -20,7 +25,18 @@ type Props = {
 };
 
 /** The yellow sign band at the top: title, count and the search field. */
-export function SearchBand({ title, games, onPressTitle, query, onChangeQuery, total, shown }: Props) {
+export function SearchBand({
+  title,
+  games,
+  onPressTitle,
+  noun = 'Pokémon',
+  placeholder = 'Name, number or type',
+  searchLabel = 'Search Pokémon by name, number or type',
+  query,
+  onChangeQuery,
+  total,
+  shown,
+}: Props) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const searching = query.trim().length > 0;
@@ -28,27 +44,33 @@ export function SearchBand({ title, games, onPressTitle, query, onChangeQuery, t
   return (
     <SignBand style={[styles.band, { paddingTop: insets.top + Spacing.two }]}>
       <View style={styles.titleRow}>
-        <Pressable
-          onPress={onPressTitle}
-          style={({ pressed }) => [styles.titleButton, pressed && { opacity: 0.6 }]}
-          hitSlop={{ top: 8, bottom: 8 }}
-          accessibilityRole="button"
-          accessibilityLabel={`${title}${games ? `, ${games}` : ''}`}
-          accessibilityHint="Choose another Pokédex">
+        {onPressTitle ? (
+          <Pressable
+            onPress={onPressTitle}
+            style={({ pressed }) => [styles.titleButton, pressed && { opacity: 0.6 }]}
+            hitSlop={{ top: 8, bottom: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={`${title}${games ? `, ${games}` : ''}`}
+            accessibilityHint="Choose another Pokédex">
+            <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
+              {title}
+            </Text>
+            <SymbolView
+              name={{ ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' }}
+              size={28}
+              tintColor={theme.onSign}
+            />
+          </Pressable>
+        ) : (
           <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
             {title}
           </Text>
-          <SymbolView
-            name={{ ios: 'chevron.down', android: 'keyboard_arrow_down', web: 'keyboard_arrow_down' }}
-            size={28}
-            tintColor={theme.onSign}
-          />
-        </Pressable>
+        )}
         {total !== undefined && (
           <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
             {searching
               ? `${shown.toLocaleString()} of ${total.toLocaleString()}`
-              : `${total.toLocaleString()} Pokémon`}
+              : `${total.toLocaleString()} ${noun}`}
           </Text>
         )}
       </View>
@@ -67,7 +89,7 @@ export function SearchBand({ title, games, onPressTitle, query, onChangeQuery, t
         <TextInput
           value={query}
           onChangeText={onChangeQuery}
-          placeholder="Name, number or type"
+          placeholder={placeholder}
           placeholderTextColor={theme.onPanelSecondary}
           selectionColor={theme.onPanelAccent}
           cursorColor={theme.onPanelAccent}
@@ -75,7 +97,7 @@ export function SearchBand({ title, games, onPressTitle, query, onChangeQuery, t
           autoCorrect={false}
           autoCapitalize="none"
           returnKeyType="search"
-          accessibilityLabel="Search Pokémon by name, number or type"
+          accessibilityLabel={searchLabel}
         />
         {searching && (
           <Pressable
