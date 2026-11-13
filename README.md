@@ -37,10 +37,22 @@ An advanced team builder for both competitive and casual players:
 
 ```bash
 npm install
-npx expo start
+npm start
 ```
 
 Scan the QR code with the **Expo Go** app on Android to open the app on your phone.
+
+`npm start` builds the Pokédex database first if it's missing or out of date. If you run `npx expo start` directly, run `npm run build-db` once beforehand.
+
+## Data
+
+All game data comes from [PokéAPI](https://pokeapi.co)'s CSV dump. It is built into a SQLite database that ships with the app, so browsing works offline.
+
+- `npm run build-db` downloads the CSV files from a pinned PokéAPI commit (cached in `.cache/`) and writes `assets/db/pokedex.db`. Add `-- --force` to rebuild even when the database is up to date.
+- The tables keep [PokéAPI's own schema](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv), filtered to English text, with the language columns dropped.
+- To update the data, change `POKEAPI_COMMIT` in `scripts/build-db.mjs` and rebuild. The app picks up the new version automatically.
+- The database isn't committed to git (it's about 43 MB). EAS cloud builds create it through the `eas-build-post-install` script.
+- Images come from the [PokeAPI/sprites](https://github.com/PokeAPI/sprites) repo (see `src/db/sprites.ts`). They're loaded on demand and cached on the device.
 
 ## Status
 
