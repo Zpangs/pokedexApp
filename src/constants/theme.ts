@@ -7,17 +7,22 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-/** The sign system: signal yellow bands and black sign panels. */
+/** The sign system: red-to-blue gradient bands and black sign panels. */
 const Sign = {
-  /** Yellow sign band (search band, identity band, active indicators). */
-  sign: '#FFCC00',
-  onSign: '#0B0B0B',
+  /** Solid accent where a gradient can't go (tab indicator, selected chips). */
+  sign: '#C8102E',
+  /** Text and icons on the gradient band and on `sign`. */
+  onSign: '#FFFFFF',
   /** Black field set into the yellow band (the search field). */
   field: '#0B0B0B',
   onPanel: '#FFFFFF',
-  onPanelAccent: '#FFCC00',
+  /** Panel sign titles; a light red that stays readable on black. */
+  onPanelAccent: '#FF7A85',
   onPanelSecondary: '#A3A3A3',
 } as const;
+
+/** The band gradient, left (red) to right (blue). White text holds AA across it. */
+export const SignGradient = ['#C8102E', '#1D4ED8'] as const;
 
 export const Colors = {
   light: {
@@ -30,6 +35,8 @@ export const Colors = {
     backgroundSelected: '#E6E6E6',
     textSecondary: '#5C5C5C',
     rule: '#E6E6E6',
+    /** The line between Dex rows. */
+    rowRule: '#A8A8A8',
     /** Stat bars, and the highest stat's bar. */
     bar: '#8A8A8A',
     barHighlight: '#0B0B0B',
@@ -44,8 +51,9 @@ export const Colors = {
     backgroundSelected: '#262626',
     textSecondary: '#A3A3A3',
     rule: '#262626',
+    rowRule: '#4D4D4D',
     bar: '#8A8A8A',
-    barHighlight: '#FFCC00',
+    barHighlight: '#FF7A85',
   },
 } as const;
 

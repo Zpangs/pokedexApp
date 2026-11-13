@@ -1,9 +1,11 @@
 ---
 name: Pokédex App
-description: An offline Pokédex read like airport wayfinding - yellow sign bands, black panel signs, big numbers.
+description: An offline Pokédex read like airport wayfinding - red-to-blue gradient sign bands, black panel signs, big numbers.
 world: "wayfinding-cartography-signage-terminal-yellow-wayfinding"
 colors:
-  sign-yellow: "#FFCC00"
+  sign-red: "#C8102E"
+  sign-blue: "#1D4ED8"
+  panel-red: "#FF7A85"
   sign-black: "#0B0B0B"
   panel-frame: "#1A1A1A"
   sign-white: "#FFFFFF"
@@ -12,6 +14,8 @@ colors:
   hairline: "#E6E6E6"
   ink-secondary: "#5C5C5C"
   hairline-dark: "#262626"
+  row-rule: "#A8A8A8"
+  row-rule-dark: "#4D4D4D"
   bar-grey: "#8A8A8A"
   type-normal: "#6E6E55"
   type-fire: "#C2410C"
@@ -111,8 +115,8 @@ spacing:
   five: "32px"
 components:
   search-band:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.sign-black}"
+    backgroundColor: "{colors.sign-red}"
+    textColor: "{colors.sign-white}"
     typography: "{typography.headline}"
     padding: "8px 16px 16px"
   search-field:
@@ -123,24 +127,24 @@ components:
     padding: "0 0 0 16px"
   gate-sign:
     backgroundColor: "{colors.sign-black}"
-    textColor: "{colors.sign-yellow}"
+    textColor: "{colors.panel-red}"
     typography: "{typography.sign}"
     rounded: "{rounded.none}"
     height: "44px"
     padding: "0 16px"
   gate-sign-dark:
     backgroundColor: "{colors.panel-frame}"
-    textColor: "{colors.sign-yellow}"
+    textColor: "{colors.panel-red}"
   section-sign:
     backgroundColor: "{colors.sign-black}"
-    textColor: "{colors.sign-yellow}"
+    textColor: "{colors.panel-red}"
     typography: "{typography.sign}"
     rounded: "{rounded.none}"
     height: "44px"
     padding: "8px 16px"
   section-sign-dark:
     backgroundColor: "{colors.panel-frame}"
-    textColor: "{colors.sign-yellow}"
+    textColor: "{colors.panel-red}"
   dex-row:
     backgroundColor: "{colors.sign-white}"
     textColor: "{colors.sign-black}"
@@ -160,7 +164,7 @@ components:
     rounded: "{rounded.badge}"
     padding: "2px 8px"
   form-chip:
-    textColor: "{colors.sign-black}"
+    textColor: "{colors.sign-white}"
     typography: "{typography.chip-label}"
     rounded: "{rounded.chip}"
     height: "40px"
@@ -170,15 +174,15 @@ components:
     textColor: "{colors.sign-white}"
     rounded: "{rounded.chip}"
   game-chip-selected:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.sign-black}"
+    backgroundColor: "{colors.sign-red}"
+    textColor: "{colors.sign-white}"
     typography: "{typography.chip-label}"
     rounded: "{rounded.chip}"
     height: "40px"
     padding: "0 16px"
   app-bar:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.sign-black}"
+    backgroundColor: "{colors.sign-red}"
+    textColor: "{colors.sign-white}"
     typography: "{typography.title}"
     height: "56px"
   nav-bar:
@@ -188,8 +192,8 @@ components:
     backgroundColor: "{colors.panel-frame}"
     textColor: "{colors.panel-grey}"
   nav-indicator:
-    backgroundColor: "{colors.sign-yellow}"
-    textColor: "{colors.sign-black}"
+    backgroundColor: "{colors.sign-red}"
+    textColor: "{colors.sign-white}"
 ---
 
 # Design System: Pokédex App
@@ -198,36 +202,38 @@ components:
 
 **Creative North Star: "Terminal Signs"**
 
-The app is read the way an airport is read: a traveller with their hands full looks up, finds the yellow sign, reads the big number and keeps walking. Every screen carries one signal-yellow sign band at the top (the search band on the National Dex, the identity band on a Pokémon's page). Below it, square black panel signs with yellow lettering mark every section and stick to the top while you scroll, so you always know which gate you are at: which generation among 1,025 Pokémon, or which part of a Pokémon's page.
+The app is read the way an airport is read: a traveller with their hands full looks up, finds the coloured sign, reads the big number and keeps walking. Every screen carries one sign band at the top, painted in a red-to-blue gradient, (the search band on the National Dex, the identity band on a Pokémon's page). Below it, square black panel signs with light-red lettering mark every section and stick to the top while you scroll, so you always know which gate you are at: which generation among 1,025 Pokémon, or which part of a Pokémon's page.
 
-Density is that of a departures board, not a magazine: full-bleed bands and panels, white (or sign-black) ground, hairline rules between rows, and numbers set big and extra-bold with tabular figures. Atkinson Hyperlegible Next is the single humanist signage face in four weights. The only hues outside yellow, black and grey are the 18 type colors, and every one of them always carries its type's name.
+Density is that of a departures board, not a magazine: full-bleed bands and panels, white (or sign-black) ground, firm grey rules between Dex rows, and numbers set big and extra-bold with tabular figures. Atkinson Hyperlegible Next is the single humanist signage face in four weights. The only hues outside the red-to-blue sign colors, black and grey are the 18 type colors, and every one of them always carries its type's name.
 
 The world was chosen by the user over the category default it replaces: a grey Material list with colored type chips.
 
 **Key Characteristics:**
-- One yellow sign band per screen, under the status bar, holding the screen's identity.
-- Square, full-width black panel signs with yellow titles head every list section and stay pinned.
+- One red-to-blue gradient sign band per screen, under the status bar, holding the screen's identity in white.
+- Square, full-width black panel signs with light-red titles head every list section and stay pinned.
 - Big extra-bold dex numbers with tabular figures and slashed zeros.
-- Flat: no shadows, no cards; depth comes from yellow against black against white.
+- Flat: no shadows, no cards; depth comes from the gradient band against black panels against the ground.
 - Pictograms are Material Symbols drawn in the sign's own ink.
 - Built for one-handed, interrupted use and system font scaling up to 2.0.
 
 ## Colors
 
-Signal yellow and sign black do all the identity work; greys carry hierarchy; the 18 type colors are data, not decoration.
+The red-to-blue sign gradient and sign black do all the identity work; greys carry hierarchy; the 18 type colors are data, not decoration.
 
 ### Primary
-- **Signal Yellow** (sign-yellow): The sign band (search band, identity band, Pokémon app bar), the active navigation indicator, the selected game chip, the cursor and selection color in the search field, the titles on panel signs, and the highest stat bar in dark mode. The same in light and dark.
-- **Sign Black** (sign-black): Ink on the yellow band, the search field set into the band, panel signs and the navigation bar in light mode, the selected form chip, the ground in dark mode, and the highest stat bar in light mode.
+- **Sign Red** (sign-red) and **Sign Blue** (sign-blue): The two ends of the sign gradient, running left (red) to right (blue) across the search band, the identity band and the Pokémon app bar. The gradient is horizontal so the fixed app bar lines up with the band scrolling beneath it. Sign red alone is the solid accent where a gradient can't go: the active navigation indicator and the selected game chip. White text passes AA across the whole gradient. The same in light and dark.
+- **Panel Red** (panel-red): A light red that stays readable on black: titles on panel signs, the cursor and selection color in the search field, and the highest stat bar in dark mode.
+- **Sign Black** (sign-black): The search field set into the band, panel signs and the navigation bar in light mode, the selected form chip, the ground in dark mode, and the highest stat bar in light mode.
 
 ### Neutral
 - **Panel Frame** (panel-frame): Panel signs and the navigation bar in dark mode, and raised element backgrounds in dark mode, so a sign keeps its edge against the sign-black ground.
-- **Sign White** (sign-white): The light-mode ground, primary text in dark mode, and text and pictograms on panels and in the search field.
+- **Sign White** (sign-white): The light-mode ground, primary text in dark mode, ink on the gradient band (title, count, number, name, genus, Back, form chips and the badge outline), and text and pictograms on panels and in the search field.
 - **Panel Grey** (panel-grey): Secondary text on panels (gate ranges, section details, inactive tab labels and icons), the search placeholder, and secondary text in dark mode.
 - **Ink Secondary** (ink-secondary): Secondary text on the light ground (prose, group labels, stat names, levels) and the outline of the Hidden ability tag.
 - **Ground Element** (ground-element): Stat bar tracks, pressed rows and the current evolution stage in light mode.
-- **Hairline** (hairline): Row rules and the Android ripple in light mode.
-- **Hairline Dark** (hairline-dark): Row rules and the ripple in dark mode.
+- **Hairline** (hairline): Rules between move rows, evolution stages and facts, and the Android ripple in light mode.
+- **Hairline Dark** (hairline-dark): The same rules and the ripple in dark mode.
+- **Row Rule** (row-rule) and **Row Rule Dark** (row-rule-dark): The 2dp line between National Dex rows, in light and dark mode; firmer than a hairline so each row reads as its own line on the board.
 - **Bar Grey** (bar-grey): Every stat bar except the highest, in both modes.
 
 ### Type colors
@@ -238,7 +244,7 @@ Eighteen fills (type-normal through type-fairy), each paired with a white or sig
 
 **The Named Type Rule.** A type is never shown by color alone. Every type badge prints the type's name, and matchup badges add the multiplier ("×2", "×½").
 
-**The Yellow Is Signage Rule.** Signal yellow marks where you are and what is selected: the sign band, the active tab, the selected game, panel titles, the top stat. It is never a fill for content or a decorative accent.
+**The Red And Blue Is Signage Rule.** The sign colors mark where you are and what is selected: the gradient band, the active tab, the selected game, panel titles, the top stat. The gradient only ever fills a sign band, always runs left red to right blue, and is never a fill for content or a decorative accent.
 
 ## Typography
 
@@ -277,60 +283,60 @@ The National Dex list uses fixed heights so scrolling and jumping stay cheap, an
 
 **The Thumb Target Rule.** Every touch target is at least 48dp, using hit slop where the visible shape is smaller: 40dp chips get 4dp above and below, the search clear button is 48dp, Back is 56dp, and rows are 56dp or taller.
 
-The status bar sits on the yellow band in both modes and always uses dark icons. The bottom navigation bar reserves its inset (80dp on Android) at the end of every scroll.
+The status bar sits on the gradient band in both modes and always uses light icons. The bottom navigation bar reserves its inset (80dp on Android) at the end of every scroll.
 
 ## Elevation & Depth
 
-The system is flat. There are no shadows and no elevation anywhere; depth is the contrast between the yellow band, the black panels and the ground, and the sticky signs do the layering by covering rows as they scroll under. Pressed states use a tonal change (ground element under a ripple, or 0.6 opacity on icons and outline buttons), not lift.
+The system is flat. There are no shadows and no elevation anywhere; depth is the contrast between the gradient band, the black panels and the ground, and the sticky signs do the layering by covering rows as they scroll under. Pressed states use a tonal change (ground element under a ripple, or 0.6 opacity on icons and outline buttons), not lift.
 
 **The No Lift Rule.** Nothing casts a shadow. A surface separates from the ground by tone and edge, never by elevation.
 
 ## Shapes
 
-Signs are square: bands, panels, the search field and the navigation bar have no radius. Small information marks have a slight radius: type badges and the Hidden ability tag at 4dp. Pressable chips (forms, games, More) are 8dp with a 2dp border. Rows are separated by hairline rules, never by boxes. Artwork sits on the band without a frame (140dp on the identity band, 56dp sprites in rows, 48dp in evolution stages).
+Signs are square: bands, panels, the search field and the navigation bar have no radius. Small information marks have a slight radius: type badges and the Hidden ability tag at 4dp. Pressable chips (forms, games, More) are 8dp with a 2dp border. Rows are separated by rules (2dp row rules in the Dex, hairlines inside sections), never by boxes. Artwork sits on the band without a frame (140dp on the identity band, 56dp sprites in rows, 48dp in evolution stages).
 
 **The Square Sign Rule.** Anything that acts as signage (a band, a panel, a field set into a band) has square corners. Radius belongs only to marks and controls.
 
 ## Components
 
 ### Sign band (search band, identity band, app bar)
-The yellow band that names the screen. It runs under the status bar and holds the title in headline weight with sign-black ink. On the Dex it holds "National Dex", the count ("1,025 Pokémon", or "12 of 1,025" while searching) and the search field. On a Pokémon's page a fixed 56dp yellow app bar holds Back and, once the identity band scrolls away, the number and name. The identity band below it holds the number, name, genus, type badges, artwork and form chips.
+The red-to-blue gradient band that names the screen. It runs under the status bar and holds the title in headline weight with white ink. On the Dex it holds "National Dex", the count ("1,025 Pokémon", or "12 of 1,025" while searching) and the search field. On a Pokémon's page a fixed 56dp gradient app bar holds Back and, once the identity band scrolls away, the number and name. The identity band below it holds the number, name, genus, type badges, artwork and form chips.
 
 ### Search field
-A square sign-black field set into the yellow band, at least 52dp tall, with a white 24dp search pictogram, white medium 17dp input text, a panel-grey placeholder ("Name, number or type") and a yellow cursor. A 48dp clear button appears while there is a query.
+A square sign-black field set into the gradient band, at least 52dp tall, with a white 24dp search pictogram, white medium 17dp input text, a panel-grey placeholder ("Name, number or type") and a panel-red cursor. A 48dp clear button appears while there is a query.
 
 ### Panel signs (gate sign, section sign)
-Full-width square panels in sign black (light) or panel frame (dark). The title is extra-bold signal yellow; the detail sits right-aligned in panel-grey label type. Gate signs show "Gen I" in yellow, the region in white bold, then the range "0001–0151" or "N found". Section signs wrap their detail onto its own line at large text sizes. Both are accessibility headers.
+Full-width square panels in sign black (light) or panel frame (dark). The title is extra-bold panel red; the detail sits right-aligned in panel-grey label type. Gate signs show "Gen I" in panel red, the region in white bold, then the range "0001–0151" or "N found". Section signs wrap their detail onto its own line at large text sizes. Both are accessibility headers.
 
 ### Dex row
-A 72dp row on the ground: the extra-bold row number, a 56dp sprite, then the name over its type badges. A hairline rule below; pressed shows ground element under the ripple. The whole row opens the Pokémon's page and is labelled "Number 25, Pikachu, Electric type".
+A 72dp row on the ground: the extra-bold row number, a 56dp sprite, then the name over its type badges. A 2dp row rule below; pressed shows ground element under the ripple. The whole row opens the Pokémon's page and is labelled "Number 25, Pikachu, Electric type".
 
 ### Type badge
 - **Style:** The type's fill with its AA label, 4dp radius, 2/8dp padding, badge type. It always prints the name, plus an optional multiplier suffix in matchups.
-- **On the yellow band:** A 1dp sign-black outline, so yellow-ish types (Electric) keep their edge against the band.
+- **On the gradient band:** A 1dp white outline, so red and blue types (Fire, Fighting, Water, Dragon) keep their edge against the band.
 
-**The Band Outline Rule.** A type badge placed on the yellow band gets a 1dp sign-black border. Off the band, badges have no border.
+**The Band Outline Rule.** A type badge placed on the gradient band gets a 1dp white border. Off the band, badges have no border.
 
 ### Chips
-- **Form chips** (identity band): 2dp sign-black border, sign-black label; selected fills sign black with a white label.
-- **Game chips** (Moves): 2dp ink-secondary border, text-colored label; selected fills signal yellow with a sign-black label and border.
+- **Form chips** (identity band): 2dp white border, white label; selected fills sign black with a white label.
+- **Game chips** (Moves): 2dp ink-secondary border, text-colored label; selected fills sign red with a white label and border.
 - **More button:** an outline control with a 2dp text-colored border and an 8dp radius, 0.6 opacity when pressed.
 - **Tag:** Hidden ability uses a 1dp ink-secondary border, a 4dp radius and badge type.
 
 ### Stat bars
-10dp square bars on a ground-element track. The highest stat uses the bar highlight (sign black in light, signal yellow in dark); the rest use bar grey. The value sits left of the bar in sign type with tabular figures.
+10dp square bars on a ground-element track. The highest stat uses the bar highlight (sign black in light, panel red in dark); the rest use bar grey. The value sits left of the bar in sign type with tabular figures.
 
 ### Navigation
-Native bottom tabs inside a sign panel: sign black in light mode and panel frame in dark mode, with a signal-yellow active indicator. The selected icon is sign black on the yellow pill with a white label; inactive icons and labels are panel grey. Pictograms are Material Symbols.
+Native bottom tabs inside a sign panel: sign black in light mode and panel frame in dark mode, with a sign-red active indicator. The selected icon is white on the red pill with a white label; inactive icons and labels are panel grey. Pictograms are Material Symbols.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** give every screen one signal-yellow sign band at the top, with sign-black ink and the screen's title in 800-weight Atkinson Hyperlegible Next.
+- **Do** give every screen one red-to-blue gradient sign band at the top (horizontal, red on the left), with white ink and the screen's title in 800-weight Atkinson Hyperlegible Next.
 - **Do** head every list section with a square panel sign that sticks to the top of the scroll.
 - **Do** use sign black (#0B0B0B) for panels in light mode and panel frame (#1A1A1A) in dark mode.
 - **Do** print the type's name on every type badge, using its AA-checked pair from the type colors.
-- **Do** outline type badges on the yellow band with 1dp sign black.
+- **Do** outline type badges on the gradient band with 1dp white.
 - **Do** set dex numbers four-digit, extra-bold and tabular, with `maxFontSizeMultiplier` 1.3.
 - **Do** keep every touch target at 48dp or more, with hit slop where the visible control is smaller.
 - **Do** let text wrap at large font scales and let bands, signs and rows grow; only the Dex gate range gives way first.
@@ -341,7 +347,7 @@ Native bottom tabs inside a sign panel: sign black in light mode and panel frame
 - **Don't** show a type, category or stat by color alone.
 - **Don't** set a panel sign in the ground color, or round its corners.
 - **Don't** add shadows or elevation; separate surfaces by tone and edge.
-- **Don't** use signal yellow as a content fill or decoration; it marks place and selection only.
-- **Don't** add hues beyond yellow, black, the greys and the 18 type colors.
+- **Don't** use the sign gradient or sign red as a content fill or decoration; they mark place and selection only.
+- **Don't** add hues beyond the sign red, blue and panel red, black, the greys and the 18 type colors.
 - **Don't** use `fontWeight` to pick an Atkinson weight on Android, or import the font package root.
 - **Don't** truncate names, details or labels at large font scale when they can wrap.

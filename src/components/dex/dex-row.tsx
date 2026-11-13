@@ -25,7 +25,7 @@ export const DexRow = memo(function DexRow({ entry, height, fontScale }: Props) 
       onPress={() => router.push(`/pokemon/${entry.number}`)}
       style={({ pressed }) => [
         styles.row,
-        { height, borderBottomColor: theme.rule },
+        { height, borderBottomColor: theme.rowRule },
         pressed && { backgroundColor: theme.backgroundElement },
       ]}
       android_ripple={{ color: theme.backgroundSelected }}
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
     gap: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 2,
   },
   number: {
     fontFamily: Font.extraBold,

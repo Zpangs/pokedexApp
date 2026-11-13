@@ -2,6 +2,7 @@ import { SymbolView } from 'expo-symbols';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SignBand } from '@/components/sign-band';
 import { Font, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -20,7 +21,7 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
   const searching = query.trim().length > 0;
 
   return (
-    <View style={[styles.band, { backgroundColor: theme.sign, paddingTop: insets.top + Spacing.two }]}>
+    <SignBand style={[styles.band, { paddingTop: insets.top + Spacing.two }]}>
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
           National Dex
@@ -45,8 +46,8 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
           onChangeText={onChangeQuery}
           placeholder="Name, number or type"
           placeholderTextColor={theme.onPanelSecondary}
-          selectionColor={theme.sign}
-          cursorColor={theme.sign}
+          selectionColor={theme.onPanelAccent}
+          cursorColor={theme.onPanelAccent}
           style={[styles.input, { color: theme.onPanel }]}
           autoCorrect={false}
           autoCapitalize="none"
@@ -68,7 +69,7 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
           </Pressable>
         )}
       </View>
-    </View>
+    </SignBand>
   );
 }
 

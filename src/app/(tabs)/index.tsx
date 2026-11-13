@@ -76,7 +76,7 @@ export default function NationalDexScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SearchBand
         query={query}
         onChangeQuery={setQuery}

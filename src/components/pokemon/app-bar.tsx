@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SignBand } from '@/components/sign-band';
 import { Font, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -15,7 +16,7 @@ export function AppBar({ title, showTitle }: { title: string; showTitle: boolean
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.bar, { backgroundColor: theme.sign, paddingTop: insets.top }]}>
+    <SignBand style={[styles.bar, { paddingTop: insets.top }]}>
       <Pressable
         onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}
@@ -33,7 +34,7 @@ export function AppBar({ title, showTitle }: { title: string; showTitle: boolean
         importantForAccessibility={showTitle ? 'auto' : 'no-hide-descendants'}>
         {title}
       </Text>
-    </View>
+    </SignBand>
   );
 }
 

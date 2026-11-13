@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { SignBand } from '@/components/sign-band';
 import { TypeBadge } from '@/components/type-badge';
 import { Font, Spacing } from '@/constants/theme';
 import { formatDexNumber } from '@/db/queries/national-dex';
@@ -24,7 +25,7 @@ export function IdentityBand({ number, name, genus, types, pokemonId, varieties,
   const theme = useTheme();
 
   return (
-    <View style={[styles.band, { backgroundColor: theme.sign }]}>
+    <SignBand style={styles.band}>
       <View style={styles.top}>
         <View style={styles.text}>
           <Text
@@ -91,7 +92,7 @@ export function IdentityBand({ number, name, genus, types, pokemonId, varieties,
           })}
         </ScrollView>
       )}
-    </View>
+    </SignBand>
   );
 }
 

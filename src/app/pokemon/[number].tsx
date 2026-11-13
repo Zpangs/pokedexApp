@@ -122,7 +122,7 @@ export default function PokemonScreen() {
   if (species === null || !Number.isInteger(number)) {
     return (
       <View style={[styles.screen, { backgroundColor: theme.background }]}>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <AppBar title="" showTitle={false} />
         <View style={styles.notice}>
           <Text style={[styles.noticeTitle, { color: theme.text }]}>No Pokémon #{param}</Text>
@@ -139,7 +139,7 @@ export default function PokemonScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <AppBar title={title} showTitle={collapsed} />
       <ScrollView
         // Remount once loaded: changing sticky headers inside a mounted view crashes Android

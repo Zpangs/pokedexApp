@@ -7,7 +7,7 @@ export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
-  // Sign-panel bar with the yellow sign color marking the current tab
+  // Sign-panel bar with the red sign accent marking the current tab
   return (
     <NativeTabs
       backgroundColor={colors.panel}
