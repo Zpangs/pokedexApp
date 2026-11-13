@@ -4,17 +4,17 @@ import { AtkinsonHyperlegibleNext_500Medium } from '@expo-google-fonts/atkinson-
 import { AtkinsonHyperlegibleNext_700Bold } from '@expo-google-fonts/atkinson-hyperlegible-next/700Bold';
 import { AtkinsonHyperlegibleNext_800ExtraBold } from '@expo-google-fonts/atkinson-hyperlegible-next/800ExtraBold';
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Colors } from '@/constants/theme';
 import { DatabaseProvider } from '@/db/database-provider';
 
 SplashScreen.preventAutoHideAsync();
 
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [fontsLoaded, fontError] = useFonts({
     AtkinsonHyperlegibleNext_400Regular,
@@ -26,11 +26,18 @@ export default function TabLayout() {
   // Keep the native splash screen up until the fonts are ready (or failed; text then falls back)
   if (!fontsLoaded && !fontError) return null;
 
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <DatabaseProvider>
         <AnimatedSplashOverlay />
-        <AppTabs />
+        {/* The tabs, with full-screen detail pages pushed on top (system Back returns) */}
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="pokemon/[number]" />
+        </Stack>
       </DatabaseProvider>
     </ThemeProvider>
   );

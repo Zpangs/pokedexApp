@@ -7,7 +7,7 @@ export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
-  // Sign-black bar with the yellow sign color marking the current tab
+  // Sign-panel bar with the yellow sign color marking the current tab
   return (
     <NativeTabs
       backgroundColor={colors.panel}
@@ -19,10 +19,7 @@ export default function AppTabs() {
       }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Dex</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Icon sf="list.number" md="format_list_numbered" />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="explore">

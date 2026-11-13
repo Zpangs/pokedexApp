@@ -36,10 +36,11 @@ export default function NationalDexScreen() {
     loadNationalDex(db).then(setDex, (e: unknown) => setError(String(e)));
   }, [db]);
 
-  // Fixed heights keep scrolling and jumping cheap; they grow with the system font size.
+  // Fixed heights keep scrolling and jumping cheap. They grow with the system font size:
+  // a row holds the name (24) over the badges (16), and a sign holds one line (22).
   const scale = Math.max(1, fontScale);
-  const rowHeight = Math.round(72 + 30 * (scale - 1));
-  const signHeight = Math.round(44 + 22 * (scale - 1));
+  const rowHeight = Math.max(72, Math.ceil(40 * scale + 28));
+  const signHeight = Math.max(44, Math.ceil(22 * scale + 22));
 
   const { items, stickyIndices, offsets, shown } = useMemo(() => {
     const words = queryWords(deferredQuery);
@@ -79,11 +80,11 @@ export default function NationalDexScreen() {
       <SearchBand
         query={query}
         onChangeQuery={setQuery}
-        total={dex?.entries.length ?? 0}
+        total={dex?.entries.length}
         shown={shown}
       />
 
-      {error ? (
+      {!dex && !error ? null : error ? (
         <Notice
           icon={{ ios: 'exclamationmark.triangle', android: 'error', web: 'error' }}
           title="The Pokédex data didn't load"
@@ -112,7 +113,7 @@ export default function NationalDexScreen() {
                 matches={item.matches}
               />
             ) : (
-              <DexRow entry={item.entry} height={rowHeight} />
+              <DexRow entry={item.entry} height={rowHeight} fontScale={fontScale} />
             )
           }
           getItemLayout={(_, index) => ({

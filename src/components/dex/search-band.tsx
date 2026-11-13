@@ -8,7 +8,8 @@ import { useTheme } from '@/hooks/use-theme';
 type Props = {
   query: string;
   onChangeQuery: (query: string) => void;
-  total: number;
+  /** Undefined while the Dex is still loading. */
+  total: number | undefined;
   shown: number;
 };
 
@@ -24,14 +25,16 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
         <Text style={[styles.title, { color: theme.onSign }]} accessibilityRole="header">
           National Dex
         </Text>
-        <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
-          {searching
-            ? `${shown.toLocaleString()} of ${total.toLocaleString()}`
-            : `${total.toLocaleString()} Pokémon`}
-        </Text>
+        {total !== undefined && (
+          <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
+            {searching
+              ? `${shown.toLocaleString()} of ${total.toLocaleString()}`
+              : `${total.toLocaleString()} Pokémon`}
+          </Text>
+        )}
       </View>
 
-      <View style={[styles.field, { backgroundColor: theme.panel }]}>
+      <View style={[styles.field, { backgroundColor: theme.field }]}>
         <SymbolView
           name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }}
           size={24}
@@ -40,7 +43,7 @@ export function SearchBand({ query, onChangeQuery, total, shown }: Props) {
         <TextInput
           value={query}
           onChangeText={onChangeQuery}
-          placeholder="Search name, number or type"
+          placeholder="Name, number or type"
           placeholderTextColor={theme.onPanelSecondary}
           selectionColor={theme.sign}
           cursorColor={theme.sign}
@@ -77,9 +80,11 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'baseline',
     justifyContent: 'space-between',
-    gap: Spacing.two,
+    columnGap: Spacing.two,
+    rowGap: Spacing.one,
   },
   title: {
     fontFamily: Font.extraBold,

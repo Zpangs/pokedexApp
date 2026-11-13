@@ -7,13 +7,13 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-/** The sign system: signal yellow bands and sign-black panels, the same in light and dark. */
+/** The sign system: signal yellow bands and black sign panels. */
 const Sign = {
-  /** Yellow sign band (search band, active indicators). */
+  /** Yellow sign band (search band, identity band, active indicators). */
   sign: '#FFCC00',
   onSign: '#0B0B0B',
-  /** Black panel signs (generation gates, search field, navigation bar). */
-  panel: '#0B0B0B',
+  /** Black field set into the yellow band (the search field). */
+  field: '#0B0B0B',
   onPanel: '#FFFFFF',
   onPanelAccent: '#FFCC00',
   onPanelSecondary: '#A3A3A3',
@@ -22,21 +22,30 @@ const Sign = {
 export const Colors = {
   light: {
     ...Sign,
+    /** Panel signs (generation gates, section signs, navigation bar). */
+    panel: '#0B0B0B',
     text: '#0B0B0B',
     background: '#FFFFFF',
     backgroundElement: '#F0F0F0',
     backgroundSelected: '#E6E6E6',
     textSecondary: '#5C5C5C',
     rule: '#E6E6E6',
+    /** Stat bars, and the highest stat's bar. */
+    bar: '#8A8A8A',
+    barHighlight: '#0B0B0B',
   },
   dark: {
     ...Sign,
+    // The sign's panel frame tone, so panels keep an edge against the black ground
+    panel: '#1A1A1A',
     text: '#FFFFFF',
     background: '#0B0B0B',
     backgroundElement: '#1A1A1A',
     backgroundSelected: '#262626',
     textSecondary: '#A3A3A3',
     rule: '#262626',
+    bar: '#8A8A8A',
+    barHighlight: '#FFCC00',
   },
 } as const;
 

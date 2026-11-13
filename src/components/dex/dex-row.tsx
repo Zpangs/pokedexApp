@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { memo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { TypeBadge } from '@/components/type-badge';
 import { Font, Spacing } from '@/constants/theme';
@@ -8,19 +9,38 @@ import { type DexEntry, formatDexNumber } from '@/db/queries/national-dex';
 import { sprites } from '@/db/sprites';
 import { useTheme } from '@/hooks/use-theme';
 
-type Props = { entry: DexEntry; height: number };
+/** The dex number is already display size, so it stops growing before the name does. */
+const NUMBER_MAX_SCALE = 1.3;
 
-/** One Pokémon: big dex number, sprite, then the name over its type badges. */
-export const DexRow = memo(function DexRow({ entry, height }: Props) {
+type Props = { entry: DexEntry; height: number; fontScale: number };
+
+/** One Pokémon: big dex number, sprite, then the name over its type badges. Opens its page. */
+export const DexRow = memo(function DexRow({ entry, height, fontScale }: Props) {
   const theme = useTheme();
   const types = entry.types.map((t) => t.name).join(' and ');
 
   return (
-    <View
-      style={[styles.row, { height, borderBottomColor: theme.rule }]}
-      accessible
+    // Not <Link asChild>: it drops a style function, and the row loses its layout
+    <Pressable
+      onPress={() => router.push(`/pokemon/${entry.number}`)}
+      style={({ pressed }) => [
+        styles.row,
+        { height, borderBottomColor: theme.rule },
+        pressed && { backgroundColor: theme.backgroundElement },
+      ]}
+      android_ripple={{ color: theme.backgroundSelected }}
+      accessibilityRole="button"
       accessibilityLabel={`Number ${entry.number}, ${entry.name}, ${types} type`}>
-      <Text style={[styles.number, { color: theme.text }]} numberOfLines={1}>
+      <Text
+        style={[
+          styles.number,
+          {
+            color: theme.text,
+            minWidth: 72 * Math.min(Math.max(fontScale, 1), NUMBER_MAX_SCALE),
+          },
+        ]}
+        maxFontSizeMultiplier={NUMBER_MAX_SCALE}
+        numberOfLines={1}>
         {formatDexNumber(entry.number)}
       </Text>
       <Image
@@ -40,7 +60,7 @@ export const DexRow = memo(function DexRow({ entry, height }: Props) {
           ))}
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 });
 
@@ -58,7 +78,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.5,
-    minWidth: 72,
   },
   sprite: {
     width: 56,
@@ -75,6 +94,7 @@ const styles = StyleSheet.create({
   },
   badges: {
     flexDirection: 'row',
+    flexShrink: 1,
     gap: Spacing.one,
   },
 });
