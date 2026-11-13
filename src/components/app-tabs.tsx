@@ -7,13 +7,18 @@ export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'dark' ? 'dark' : 'light'];
 
+  // Sign-black bar with the yellow sign color marking the current tab
   return (
     <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      backgroundColor={colors.panel}
+      indicatorColor={colors.sign}
+      iconColor={{ default: colors.onPanelSecondary, selected: colors.onSign }}
+      labelStyle={{
+        default: { color: colors.onPanelSecondary },
+        selected: { color: colors.onPanel },
+      }}>
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Dex</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           src={require('@/assets/images/tabIcons/home.png')}
           renderingMode="template"

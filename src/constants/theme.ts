@@ -7,21 +7,45 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+/** The sign system: signal yellow bands and sign-black panels, the same in light and dark. */
+const Sign = {
+  /** Yellow sign band (search band, active indicators). */
+  sign: '#FFCC00',
+  onSign: '#0B0B0B',
+  /** Black panel signs (generation gates, search field, navigation bar). */
+  panel: '#0B0B0B',
+  onPanel: '#FFFFFF',
+  onPanelAccent: '#FFCC00',
+  onPanelSecondary: '#A3A3A3',
+} as const;
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    ...Sign,
+    text: '#0B0B0B',
+    background: '#FFFFFF',
+    backgroundElement: '#F0F0F0',
+    backgroundSelected: '#E6E6E6',
+    textSecondary: '#5C5C5C',
+    rule: '#E6E6E6',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    ...Sign,
+    text: '#FFFFFF',
+    background: '#0B0B0B',
+    backgroundElement: '#1A1A1A',
+    backgroundSelected: '#262626',
+    textSecondary: '#A3A3A3',
+    rule: '#262626',
   },
+} as const;
+
+/** Atkinson Hyperlegible Next, loaded in the root layout. On Android each weight is its own family. */
+export const Font = {
+  regular: 'AtkinsonHyperlegibleNext_400Regular',
+  medium: 'AtkinsonHyperlegibleNext_500Medium',
+  bold: 'AtkinsonHyperlegibleNext_700Bold',
+  extraBold: 'AtkinsonHyperlegibleNext_800ExtraBold',
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

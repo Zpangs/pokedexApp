@@ -1,98 +1,172 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSQLiteContext } from 'expo-sqlite';
+import { StatusBar } from 'expo-status-bar';
+import { SymbolView } from 'expo-symbols';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { DexRow } from '@/components/dex/dex-row';
+import { GenerationSign } from '@/components/dex/generation-sign';
+import { SearchBand } from '@/components/dex/search-band';
+import { BottomTabInset, Font, Spacing } from '@/constants/theme';
+import {
+  type DexEntry,
+  type DexGeneration,
+  loadNationalDex,
+  matchesQuery,
+  queryWords,
+} from '@/db/queries/national-dex';
+import { useTheme } from '@/hooks/use-theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+type Item =
+  | { kind: 'generation'; key: string; generation: DexGeneration; matches?: number }
+  | { kind: 'entry'; key: string; entry: DexEntry };
+
+type Dex = Awaited<ReturnType<typeof loadNationalDex>>;
+
+export default function NationalDexScreen() {
+  const db = useSQLiteContext();
+  const theme = useTheme();
+  const { fontScale } = useWindowDimensions();
+  const [dex, setDex] = useState<Dex | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  useEffect(() => {
+    loadNationalDex(db).then(setDex, (e: unknown) => setError(String(e)));
+  }, [db]);
+
+  // Fixed heights keep scrolling and jumping cheap; they grow with the system font size.
+  const scale = Math.max(1, fontScale);
+  const rowHeight = Math.round(72 + 30 * (scale - 1));
+  const signHeight = Math.round(44 + 22 * (scale - 1));
+
+  const { items, stickyIndices, offsets, shown } = useMemo(() => {
+    const words = queryWords(deferredQuery);
+    const searching = words.length > 0;
+    const items: Item[] = [];
+    const stickyIndices: number[] = [];
+    let shown = 0;
+
+    for (const generation of dex?.generations ?? []) {
+      const entries = (dex?.entries ?? []).filter(
+        (e) => e.generationId === generation.id && (!searching || matchesQuery(e, words))
+      );
+      if (entries.length === 0) continue;
+      shown += entries.length;
+      stickyIndices.push(items.length);
+      items.push({
+        kind: 'generation',
+        key: `gen-${generation.id}`,
+        generation,
+        matches: searching ? entries.length : undefined,
+      });
+      for (const entry of entries) items.push({ kind: 'entry', key: `p-${entry.number}`, entry });
+    }
+
+    const offsets: number[] = [];
+    let y = 0;
+    for (const item of items) {
+      offsets.push(y);
+      y += item.kind === 'generation' ? signHeight : rowHeight;
+    }
+    return { items, stickyIndices, offsets, shown };
+  }, [dex, deferredQuery, rowHeight, signHeight]);
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      <StatusBar style="dark" />
+      <SearchBand
+        query={query}
+        onChangeQuery={setQuery}
+        total={dex?.entries.length ?? 0}
+        shown={shown}
+      />
+
+      {error ? (
+        <Notice
+          icon={{ ios: 'exclamationmark.triangle', android: 'error', web: 'error' }}
+          title="The Pokédex data didn't load"
+          body={`Rebuild it with npm run build-db, then restart the app. (${error})`}
+        />
+      ) : dex && items.length === 0 ? (
+        <Notice
+          icon={{ ios: 'magnifyingglass', android: 'search_off', web: 'search_off' }}
+          title={`No Pokémon match “${query.trim()}”`}
+          body="Try part of a name, a number like 25, or a type like fire. Combine them to narrow down, like “fire fly”."
+        />
+      ) : (
+        <FlatList
+          // Sticky headers crash on Android ("addViewAt: failed to insert view") when they shift
+          // inside a mounted list or when views are clipped, so remount when the signs change
+          // and keep clipping off.
+          key={stickyIndices.join(',')}
+          removeClippedSubviews={false}
+          data={items}
+          keyExtractor={(item) => item.key}
+          renderItem={({ item }) =>
+            item.kind === 'generation' ? (
+              <GenerationSign
+                generation={item.generation}
+                height={signHeight}
+                matches={item.matches}
+              />
+            ) : (
+              <DexRow entry={item.entry} height={rowHeight} />
+            )
+          }
+          getItemLayout={(_, index) => ({
+            index,
+            offset: offsets[index] ?? 0,
+            length: items[index]?.kind === 'generation' ? signHeight : rowHeight,
+          })}
+          stickyHeaderIndices={stickyIndices}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          initialNumToRender={14}
+          windowSize={11}
+          contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.three }}
+        />
+      )}
+    </View>
   );
 }
 
-export default function HomeScreen() {
+type NoticeProps = {
+  icon: React.ComponentProps<typeof SymbolView>['name'];
+  title: string;
+  body: string;
+};
+
+function Notice({ icon, title, body }: NoticeProps) {
+  const theme = useTheme();
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <View style={styles.notice}>
+      <SymbolView name={icon} size={40} tintColor={theme.text} />
+      <Text style={[styles.noticeTitle, { color: theme.text }]}>{title}</Text>
+      <Text style={[styles.noticeBody, { color: theme.textSecondary }]}>{body}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
-    flex: 1,
+  notice: {
     paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    paddingTop: Spacing.five,
+    gap: Spacing.two,
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  noticeTitle: {
+    fontFamily: Font.bold,
+    fontSize: 20,
+    lineHeight: 26,
+    marginTop: Spacing.two,
   },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  noticeBody: {
+    fontFamily: Font.regular,
+    fontSize: 16,
+    lineHeight: 24,
   },
 });

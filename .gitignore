@@ -45,3 +45,6 @@ example
 # Pokédex database: built by `npm run build-db`
 /.cache/
 /assets/db/pokedex.db
+
+# Design reference images downloaded by the impeccable skill
+/.impeccable/reference/

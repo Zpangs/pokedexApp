@@ -1,0 +1,80 @@
+import { Image } from 'expo-image';
+import { memo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { TypeBadge } from '@/components/type-badge';
+import { Font, Spacing } from '@/constants/theme';
+import { type DexEntry, formatDexNumber } from '@/db/queries/national-dex';
+import { sprites } from '@/db/sprites';
+import { useTheme } from '@/hooks/use-theme';
+
+type Props = { entry: DexEntry; height: number };
+
+/** One Pokémon: big dex number, sprite, then the name over its type badges. */
+export const DexRow = memo(function DexRow({ entry, height }: Props) {
+  const theme = useTheme();
+  const types = entry.types.map((t) => t.name).join(' and ');
+
+  return (
+    <View
+      style={[styles.row, { height, borderBottomColor: theme.rule }]}
+      accessible
+      accessibilityLabel={`Number ${entry.number}, ${entry.name}, ${types} type`}>
+      <Text style={[styles.number, { color: theme.text }]} numberOfLines={1}>
+        {formatDexNumber(entry.number)}
+      </Text>
+      <Image
+        source={sprites.sprite(entry.pokemonId)}
+        style={styles.sprite}
+        contentFit="contain"
+        recyclingKey={String(entry.pokemonId)}
+        transition={0}
+      />
+      <View style={styles.body}>
+        <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>
+          {entry.name}
+        </Text>
+        <View style={styles.badges}>
+          {entry.types.map((t) => (
+            <TypeBadge key={t.identifier} identifier={t.identifier} name={t.name} />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+});
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  number: {
+    fontFamily: Font.extraBold,
+    fontSize: 26,
+    lineHeight: 32,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5,
+    minWidth: 72,
+  },
+  sprite: {
+    width: 56,
+    height: 56,
+  },
+  body: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  name: {
+    fontFamily: Font.bold,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  badges: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+});
