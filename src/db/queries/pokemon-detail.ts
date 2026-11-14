@@ -31,7 +31,7 @@ export type SpeciesInfo = {
 };
 
 export type Stat = { identifier: string; name: string; value: number };
-export type Ability = { name: string; effect: string | null; isHidden: boolean };
+export type Ability = { id: number; name: string; effect: string | null; isHidden: boolean };
 
 export type Matchup = { type: DexType; multiplier: number };
 
@@ -207,8 +207,8 @@ export async function loadForm(db: SQLiteDatabase, pokemonId: number): Promise<P
        WHERE ps.pokemon_id = ? ORDER BY s.id`,
       pokemonId
     ),
-    db.getAllAsync<{ name: string; effect: string | null; is_hidden: number }>(
-      `SELECT an.name, ap.short_effect AS effect, pa.is_hidden FROM pokemon_abilities pa
+    db.getAllAsync<{ id: number; name: string; effect: string | null; is_hidden: number }>(
+      `SELECT pa.ability_id AS id, an.name, ap.short_effect AS effect, pa.is_hidden FROM pokemon_abilities pa
        JOIN ability_names an ON an.ability_id = pa.ability_id
        LEFT JOIN ability_prose ap ON ap.ability_id = pa.ability_id
        WHERE pa.pokemon_id = ? ORDER BY pa.slot`,
@@ -242,7 +242,7 @@ export async function loadForm(db: SQLiteDatabase, pokemonId: number): Promise<P
     weight: pokemon.weight / 10,
     types: types.map(({ identifier, name }) => ({ identifier, name })),
     stats: stats.map((s) => ({ ...s, name: shortStatName(s.identifier, s.name) })),
-    abilities: abilities.map((a) => ({ name: a.name, effect: a.effect, isHidden: a.is_hidden === 1 })),
+    abilities: abilities.map((a) => ({ id: a.id, name: a.name, effect: a.effect, isHidden: a.is_hidden === 1 })),
     matchups: [...byAttacker.values()]
       .filter((m) => m.multiplier !== 1)
       .sort((a, b) => b.multiplier - a.multiplier),
@@ -301,6 +301,11 @@ const REGIONAL_LINE_EXCEPTIONS = {
  */
 export function isRegionalForm(form: string | null) {
   return !!form && /^(alola|galar|hisui|paldea)(-|$)/.test(form) && !form.endsWith('-cap');
+}
+
+/** Totem Pokémon are boss versions that can't be caught, so they're left out of Pokémon lists. */
+export function isTotemForm(form: string | null) {
+  return !!form && form.startsWith('totem');
 }
 
 /**

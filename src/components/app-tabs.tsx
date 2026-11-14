@@ -26,6 +26,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Moves</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="bolt.fill" md="bolt" />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="abilities">
+        <NativeTabs.Trigger.Label>Abilities</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="sparkles" md="auto_awesome" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

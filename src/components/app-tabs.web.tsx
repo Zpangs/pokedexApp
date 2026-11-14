@@ -27,6 +27,9 @@ export default function AppTabs() {
           <TabTrigger name="moves" href="/moves" asChild>
             <TabButton>Moves</TabButton>
           </TabTrigger>
+          <TabTrigger name="abilities" href="/abilities" asChild>
+            <TabButton>Abilities</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

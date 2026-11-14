@@ -90,19 +90,36 @@ export function AbilitiesSection({ abilities }: { abilities: Ability[] }) {
   return (
     <SectionBody>
       {abilities.map((a) => (
-        <View key={a.name} style={styles.ability}>
-          <View style={styles.abilityHead}>
-            <Text style={[styles.strong, { color: theme.text }]}>{a.name}</Text>
-            {a.isHidden && (
-              <View style={[styles.tag, { borderColor: theme.textSecondary }]}>
-                <Text style={[styles.tagLabel, { color: theme.textSecondary }]}>Hidden ability</Text>
-              </View>
-            )}
+        <Pressable
+          key={a.name}
+          onPress={() => router.push({ pathname: '/ability/[id]', params: { id: a.id } })}
+          style={({ pressed }) => [
+            styles.ability,
+            pressed && { backgroundColor: theme.backgroundElement },
+          ]}
+          android_ripple={{ color: theme.backgroundSelected }}
+          accessibilityRole="button"
+          accessibilityLabel={`${a.name}${a.isHidden ? ', hidden ability' : ''}${a.effect ? `. ${a.effect}` : ''}`}
+          accessibilityHint="Opens the ability">
+          <View style={styles.abilityText}>
+            <View style={styles.abilityHead}>
+              <Text style={[styles.strong, { color: theme.text }]}>{a.name}</Text>
+              {a.isHidden && (
+                <View style={[styles.tag, { borderColor: theme.textSecondary }]}>
+                  <Text style={[styles.tagLabel, { color: theme.textSecondary }]}>Hidden ability</Text>
+                </View>
+              )}
+            </View>
+            {a.effect ? (
+              <Text style={[styles.prose, { color: theme.textSecondary }]}>{a.effect}</Text>
+            ) : null}
           </View>
-          {a.effect ? (
-            <Text style={[styles.prose, { color: theme.textSecondary }]}>{a.effect}</Text>
-          ) : null}
-        </View>
+          <SymbolView
+            name={{ ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' }}
+            size={22}
+            tintColor={theme.textSecondary}
+          />
+        </Pressable>
       ))}
     </SectionBody>
   );
@@ -496,6 +513,16 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   ability: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    // Full-width press area, text still lined up with the rest of the section
+    marginHorizontal: -Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  abilityText: {
+    flex: 1,
     gap: Spacing.one,
   },
   abilityHead: {

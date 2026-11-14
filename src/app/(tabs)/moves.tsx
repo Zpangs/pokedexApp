@@ -1,10 +1,10 @@
 import { useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { SymbolView } from 'expo-symbols';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { SearchBand } from '@/components/dex/search-band';
+import { Notice } from '@/components/notice';
 import { MoveRow } from '@/components/moves/move-row';
 import { BottomTabInset, Font, Spacing } from '@/constants/theme';
 import { loadMoves, matchesMoveQuery, type MoveSummary } from '@/db/queries/moves';
@@ -128,23 +128,6 @@ export default function MovesScreen() {
   );
 }
 
-type NoticeProps = {
-  icon: React.ComponentProps<typeof SymbolView>['name'];
-  title: string;
-  body: string;
-};
-
-function Notice({ icon, title, body }: NoticeProps) {
-  const theme = useTheme();
-  return (
-    <View style={styles.notice}>
-      <SymbolView name={icon} size={40} tintColor={theme.text} />
-      <Text style={[styles.noticeTitle, { color: theme.text }]}>{title}</Text>
-      <Text style={[styles.noticeBody, { color: theme.textSecondary }]}>{body}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -165,21 +148,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontVariant: ['tabular-nums'],
-  },
-  notice: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.five,
-    gap: Spacing.two,
-  },
-  noticeTitle: {
-    fontFamily: Font.bold,
-    fontSize: 20,
-    lineHeight: 26,
-    marginTop: Spacing.two,
-  },
-  noticeBody: {
-    fontFamily: Font.regular,
-    fontSize: 16,
-    lineHeight: 24,
   },
 });

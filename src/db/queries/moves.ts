@@ -1,7 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { type DexType, normalizeForSearch } from './national-dex';
-import { type GameOption, isRegionalForm } from './pokemon-detail';
+import { type GameOption, isRegionalForm, isTotemForm } from './pokemon-detail';
 
 /** Shadow moves (Colosseum, XD) have ids above this and a non-battle type; they're left out. */
 const SHADOW_MOVE_MIN_ID = 10000;
@@ -293,15 +293,16 @@ export async function loadMoveLearners(
     moveId,
     versionGroupId
   );
-  // Forms that learn it exactly like their default form (Pikachu in a cap, Totem forms) would
-  // only repeat it; regional forms stay, since they're Pokémon players look for by name
+  // Forms that learn it exactly like their default form (Pikachu in a cap) would only repeat
+  // it, and Totems can't be caught; regional forms stay, since players look for them by name
   const defaults = new Set(
     rows.filter((r) => r.is_default === 1).map((r) => `${r.number}|${r.method}|${r.level}`)
   );
   const repeats = (r: (typeof rows)[number]) =>
-    r.is_default === 0 &&
-    !isRegionalForm(r.form) &&
-    defaults.has(`${r.number}|${r.method}|${r.level}`);
+    isTotemForm(r.form) ||
+    (r.is_default === 0 &&
+      !isRegionalForm(r.form) &&
+      defaults.has(`${r.number}|${r.method}|${r.level}`));
 
   return rows.filter((r) => !repeats(r)).map((r) => ({
     number: r.number,

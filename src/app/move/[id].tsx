@@ -1,12 +1,12 @@
-import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { memo, useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppBar } from '@/components/pokemon/app-bar';
+import { PokemonRow } from '@/components/pokemon/pokemon-row';
 import { SectionSign } from '@/components/pokemon/section-sign';
 import { GamePicker, METHOD_LABELS, Quiet, SectionBody } from '@/components/pokemon/sections';
 import { SignBand } from '@/components/sign-band';
@@ -20,9 +20,8 @@ import {
   type MoveDetail,
   type MoveLearner,
 } from '@/db/queries/moves';
-import { formatDexNumber, plural } from '@/db/queries/national-dex';
+import { plural } from '@/db/queries/national-dex';
 import type { GameOption } from '@/db/queries/pokemon-detail';
-import { sprites } from '@/db/sprites';
 import { useTheme } from '@/hooks/use-theme';
 
 /** Pokémon Champions only has training moves; prefer a main-series game when picking a default. */
@@ -275,53 +274,17 @@ function ChangesBody({ move }: { move: MoveDetail }) {
   );
 }
 
-/** A Pokémon that learns the move: sprite, name and types, with the level it learns it at. */
-const LearnerRow = memo(function LearnerRow({ learner }: { learner: MoveLearner }) {
-  const theme = useTheme();
+/** A Pokémon that learns the move, with the level it learns it at. */
+function LearnerRow({ learner }: { learner: MoveLearner }) {
   const isLevel = learner.method === 'Level up';
-  const lead = isLevel ? (learner.level > 0 ? `Lv ${learner.level}` : 'Evo') : null;
-  const form = learner.pokemonId === learner.number ? undefined : String(learner.pokemonId);
-
   return (
-    <Pressable
-      onPress={() =>
-        router.push({ pathname: '/pokemon/[number]', params: { number: learner.number, form } })
-      }
-      style={({ pressed }) => [
-        styles.learner,
-        { borderBottomColor: theme.rule },
-        pressed && { backgroundColor: theme.backgroundElement },
-      ]}
-      android_ripple={{ color: theme.backgroundSelected }}
-      accessibilityRole="button"
-      accessibilityLabel={`${learner.name}, ${learner.types.map((t) => t.name).join(' and ')} type${
-        lead ? `, ${learner.level > 0 ? `level ${learner.level}` : 'on evolution'}` : ''
-      }`}>
-      <Image
-        source={sprites.sprite(learner.pokemonId)}
-        style={styles.sprite}
-        contentFit="contain"
-        recyclingKey={String(learner.pokemonId)}
-        transition={0}
-      />
-      <View style={styles.learnerText}>
-        <Text style={[styles.learnerName, { color: theme.text }]} numberOfLines={1}>
-          {learner.name}
-          <Text style={[styles.learnerNumber, { color: theme.textSecondary }]}>
-            {'  '}
-            {formatDexNumber(learner.number)}
-          </Text>
-        </Text>
-        <View style={styles.badges}>
-          {learner.types.map((t) => (
-            <TypeBadge key={t.identifier} identifier={t.identifier} name={t.name} />
-          ))}
-        </View>
-      </View>
-      {lead ? <Text style={[styles.lead, { color: theme.text }]}>{lead}</Text> : null}
-    </Pressable>
+    <PokemonRow
+      pokemon={learner}
+      trailing={isLevel ? (learner.level > 0 ? `Lv ${learner.level}` : 'Evo') : undefined}
+      trailingLabel={isLevel ? (learner.level > 0 ? `level ${learner.level}` : 'on evolution') : undefined}
+    />
   );
-});
+}
 
 const styles = StyleSheet.create({
   screen: {
@@ -394,39 +357,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.four,
     paddingBottom: Spacing.one,
-  },
-  learner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    minHeight: 64,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  sprite: {
-    width: 48,
-    height: 48,
-  },
-  learnerText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
-  learnerName: {
-    fontFamily: Font.bold,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  learnerNumber: {
-    fontFamily: Font.medium,
-    fontSize: 14,
-    fontVariant: ['tabular-nums'],
-  },
-  lead: {
-    fontFamily: Font.extraBold,
-    fontSize: 16,
-    lineHeight: 22,
-    fontVariant: ['tabular-nums'],
   },
   notice: {
     paddingHorizontal: Spacing.four,
