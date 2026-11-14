@@ -38,6 +38,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Items</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="bag.fill" md="backpack" />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="types">
+        <NativeTabs.Trigger.Label>Types</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="square.grid.3x3.fill" md="grid_view" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

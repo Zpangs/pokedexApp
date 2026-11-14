@@ -41,6 +41,7 @@ export default function RootLayout() {
           <Stack.Screen name="move/[id]" />
           <Stack.Screen name="ability/[id]" />
           <Stack.Screen name="item/[id]" />
+          <Stack.Screen name="type/[id]" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>
