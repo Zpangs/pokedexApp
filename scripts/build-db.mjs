@@ -10,7 +10,11 @@
  * Usage: npm run build-db [-- --force]
  * Skips the build when assets/db/pokedex.db already matches the current version; --force rebuilds.
  * To update the data, change POKEAPI_COMMIT to a newer commit of PokeAPI/pokeapi and rebuild.
+ *
+ * PokéAPI has no item locations, so those come from data/item-locations.json (made by
+ * scripts/scrape-item-locations.mjs from Serebii.net) and go into the item_locations table.
  */
+import { createHash } from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -19,13 +23,14 @@ import { fileURLToPath } from 'node:url';
 
 const POKEAPI_COMMIT = '8a92bfa7dab2f12b84b5d151562f9857c133ff30';
 /** Bump when this script's output changes shape, so the app picks up a fresh copy. */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const ENGLISH = '9';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE_DIR = path.join(ROOT, '.cache', 'pokeapi-csv', POKEAPI_COMMIT);
 const OUT_DB = path.join(ROOT, 'assets', 'db', 'pokedex.db');
 const OUT_VERSION = path.join(ROOT, 'src', 'db', 'version.ts');
+const ITEM_LOCATIONS = path.join(ROOT, 'data', 'item-locations.json');
 const CSV_URL = (table) =>
   `https://raw.githubusercontent.com/PokeAPI/pokeapi/${POKEAPI_COMMIT}/data/v2/csv/${table}.csv`;
 
@@ -204,6 +209,31 @@ function importTable(db, table, csv) {
   return rows.length;
 }
 
+/**
+ * Where to find items, per game: one row per line of Serebii's Locations ("found") and
+ * Shopping Details ("shop") tables, in its order (oldest game first).
+ */
+function importItemLocations(db, json) {
+  db.exec(`CREATE TABLE item_locations (
+    item_id INTEGER, kind TEXT, sort INTEGER, games TEXT, location TEXT)`);
+  db.exec('CREATE INDEX item_locations__item_id ON item_locations (item_id)');
+  if (!json) return 0;
+  const ids = new Map(db.prepare('SELECT identifier, id FROM items').all().map((r) => [r.identifier, r.id]));
+  const insert = db.prepare('INSERT INTO item_locations VALUES (?, ?, ?, ?, ?)');
+  let count = 0;
+  for (const [identifier, { found, shops }] of Object.entries(JSON.parse(json).items)) {
+    const id = ids.get(identifier);
+    if (id === undefined) continue;
+    for (const [kind, rows] of [['found', found], ['shop', shops]]) {
+      rows.forEach((row, sort) => {
+        insert.run(id, kind, sort, row.games.join(' / '), row.where.join('\n'));
+        count++;
+      });
+    }
+  }
+  return count;
+}
+
 function builtVersion() {
   if (!existsSync(OUT_DB)) return null;
   try {
@@ -218,7 +248,9 @@ function builtVersion() {
 
 async function main() {
   const started = Date.now();
-  const version = `${SCHEMA_VERSION}-${POKEAPI_COMMIT.slice(0, 7)}`;
+  const locations = existsSync(ITEM_LOCATIONS) ? await readFile(ITEM_LOCATIONS, 'utf8') : null;
+  const locationsHash = createHash('sha1').update(locations ?? '').digest('hex').slice(0, 7);
+  const version = `${SCHEMA_VERSION}-${POKEAPI_COMMIT.slice(0, 7)}-${locationsHash}`;
   if (!process.argv.includes('--force') && builtVersion() === version) {
     console.log(`${path.relative(ROOT, OUT_DB)} is up to date (version ${version}).`);
     return;
@@ -237,6 +269,7 @@ async function main() {
   db.exec('BEGIN');
   let total = 0;
   for (const table of TABLES) total += importTable(db, table, csvs.get(table));
+  total += importItemLocations(db, locations);
 
   db.exec('CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)');
   const meta = db.prepare('INSERT INTO meta VALUES (?, ?)');

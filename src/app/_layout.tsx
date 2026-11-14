@@ -40,6 +40,7 @@ export default function RootLayout() {
           <Stack.Screen name="dex-picker" />
           <Stack.Screen name="move/[id]" />
           <Stack.Screen name="ability/[id]" />
+          <Stack.Screen name="item/[id]" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

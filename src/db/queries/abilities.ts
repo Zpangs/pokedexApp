@@ -1,7 +1,14 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { type DexType, normalizeForSearch } from './national-dex';
+import { normalizeForSearch } from './national-dex';
 import { isRegionalForm, isTotemForm } from './pokemon-detail';
+import {
+  type ListedPokemon,
+  POKEMON_COLUMNS,
+  POKEMON_JOINS,
+  type PokemonListRow,
+  toListedPokemon,
+} from './pokemon-list';
 
 export type AbilitySummary = {
   id: number;
@@ -47,15 +54,7 @@ export type AbilityChange = {
   before: string;
 };
 
-export type AbilityHolder = {
-  /** National Dex number. */
-  number: number;
-  pokemonId: number;
-  /** "Gyarados", or a form's own name ("Mega Manectric"). */
-  name: string;
-  types: DexType[];
-  isHidden: boolean;
-};
+export type AbilityHolder = ListedPokemon & { isHidden: boolean };
 
 export type FormerHolder = AbilityHolder & {
   /** The last generation it had the ability in, as a numeral ("VI"). */
@@ -75,48 +74,6 @@ export type AbilityDetail = {
   holders: AbilityHolder[];
   formerHolders: FormerHolder[];
 };
-
-type HolderRow = {
-  number: number;
-  pokemon_id: number;
-  is_default: number;
-  form: string | null;
-  name: string;
-  is_hidden: number;
-  type1: string;
-  type1_name: string;
-  type2: string | null;
-  type2_name: string | null;
-};
-
-/** Name and types of a Pokémon `p`, with forms under their own name ("Alolan Raichu"). */
-const POKEMON_COLUMNS = `
-  p.species_id AS number, p.id AS pokemon_id, p.is_default, f.form_identifier AS form,
-  COALESCE(CASE WHEN p.is_default = 0 THEN fn.pokemon_name END, sn.name) AS name,
-  t1.identifier AS type1, tn1.name AS type1_name, t2.identifier AS type2, tn2.name AS type2_name`;
-const POKEMON_JOINS = `
-  JOIN pokemon_species_names sn ON sn.pokemon_species_id = p.species_id
-  LEFT JOIN pokemon_forms f ON f.pokemon_id = p.id AND f.is_default = 1
-  LEFT JOIN pokemon_form_names fn ON fn.pokemon_form_id = f.id
-  JOIN pokemon_types pt1 ON pt1.pokemon_id = p.id AND pt1.slot = 1
-  JOIN types t1 ON t1.id = pt1.type_id
-  JOIN type_names tn1 ON tn1.type_id = t1.id
-  LEFT JOIN pokemon_types pt2 ON pt2.pokemon_id = p.id AND pt2.slot = 2
-  LEFT JOIN types t2 ON t2.id = pt2.type_id
-  LEFT JOIN type_names tn2 ON tn2.type_id = t2.id`;
-
-function toHolder(r: HolderRow): AbilityHolder {
-  return {
-    number: r.number,
-    pokemonId: r.pokemon_id,
-    name: r.name,
-    isHidden: r.is_hidden === 1,
-    types: [
-      { identifier: r.type1, name: r.type1_name },
-      ...(r.type2 && r.type2_name ? [{ identifier: r.type2, name: r.type2_name }] : []),
-    ],
-  };
-}
 
 export async function loadAbility(db: SQLiteDatabase, id: number): Promise<AbilityDetail | null> {
   const ability = await db.getFirstAsync<{
@@ -199,8 +156,16 @@ export async function loadAbility(db: SQLiteDatabase, id: number): Promise<Abili
     generation: numeral(ability.generation),
     changes: changes.map((c) => ({ since: c.since, before: c.effect })),
     holders: holders.filter((r) => !repeats(r)).map(toHolder),
-    formerHolders: former.filter((r) => !isTotemForm(r.form)).map((r) => ({ ...toHolder(r), until: numeral(r.generation) })),
+    formerHolders: former
+      .filter((r) => !isTotemForm(r.form))
+      .map((r) => ({ ...toHolder(r), until: numeral(r.generation) })),
   };
+}
+
+type HolderRow = PokemonListRow & { is_hidden: number };
+
+function toHolder(r: HolderRow): AbilityHolder {
+  return { ...toListedPokemon(r), isHidden: r.is_hidden === 1 };
 }
 
 function numeral(generation: string) {

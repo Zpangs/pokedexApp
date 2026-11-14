@@ -30,6 +30,9 @@ export default function AppTabs() {
           <TabTrigger name="abilities" href="/abilities" asChild>
             <TabButton>Abilities</TabButton>
           </TabTrigger>
+          <TabTrigger name="items" href="/items" asChild>
+            <TabButton>Items</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

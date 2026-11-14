@@ -52,6 +52,7 @@ All game data comes from [PokéAPI](https://pokeapi.co)'s CSV dump. It is built 
 - The tables keep [PokéAPI's own schema](https://github.com/PokeAPI/pokeapi/tree/master/data/v2/csv), filtered to English text, with the language columns dropped.
 - To update the data, change `POKEAPI_COMMIT` in `scripts/build-db.mjs` and rebuild. The app picks up the new version automatically.
 - The database isn't committed to git (it's about 43 MB). EAS cloud builds create it through the `eas-build-post-install` script.
+- PokéAPI has no item locations. Those come from [Serebii.net](https://www.serebii.net/itemdex/)'s ItemDex, saved in `data/item-locations.json` (committed) and loaded into an extra `item_locations` table. `node scripts/scrape-item-locations.mjs` refreshes the file: it fetches one page at a time with a pause between requests and caches pages in `.cache/serebii-items/`, so only new items are fetched again. Then run `npm run build-db`.
 - Images come from the [PokeAPI/sprites](https://github.com/PokeAPI/sprites) repo (see `src/db/sprites.ts`). They're loaded on demand and cached on the device.
 
 ## Status
