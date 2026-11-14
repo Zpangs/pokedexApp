@@ -145,6 +145,30 @@ export function calcStat(
   return Math.floor((core + 5) * natureMultiplier);
 }
 
+/**
+ * All six stats for a spread. Without EVs and IVs in the game, Gen I–II take the best DVs and
+ * full stat experience (as Showdown does) and later games the maximum IVs.
+ */
+export function spreadStats(
+  base: StatSpread,
+  spread: { level: number; evs: StatSpread; ivs: StatSpread; natureId: number | null },
+  data: Pick<GameData, 'rules' | 'game' | 'natures'>,
+  shedinja = false
+): StatSpread {
+  const { rules, game } = data;
+  const nature = data.natures.find((n) => n.id === spread.natureId);
+  const up = nature?.raisesId ? statKey(nature.raisesId) : null;
+  const down = nature?.lowersId ? statKey(nature.lowersId) : null;
+  const out = { ...base };
+  for (const k of STAT_KEYS) {
+    const ev = rules.spreads ? spread.evs[k] : game.generation <= 2 ? MAX_EV : 0;
+    const iv = rules.spreads ? spread.ivs[k] : game.generation <= 2 ? 30 : MAX_IV;
+    const mult = k === up ? 1.1 : k === down ? 0.9 : 1;
+    out[k] = calcStat(k, base[k], spread.level, ev, iv, mult, shedinja);
+  }
+  return out;
+}
+
 // ── Per-game data ─────────────────────────────────────────────────────────────────────────
 
 export type TeamPokemon = {
@@ -511,7 +535,7 @@ function matchMegaStones(stones: { id: number; identifier: string }[], megas: Me
 
 // ── One team member's options ─────────────────────────────────────────────────────────────
 
-export type TeamAbility = { id: number; name: string; effect: string | null; isHidden: boolean };
+export type TeamAbility = { id: number; identifier: string; name: string; effect: string | null; isHidden: boolean };
 
 export type TeamMove = {
   id: number;
@@ -599,7 +623,7 @@ export async function loadBaseStats(db: SQLiteDatabase, pokemonId: number, gen: 
   return stats;
 }
 
-async function loadAbilitiesFor(
+export async function loadAbilitiesFor(
   db: SQLiteDatabase,
   pokemonId: number,
   gen: number,
@@ -625,8 +649,14 @@ async function loadAbilitiesFor(
     .sort(([a], [b]) => a - b);
   if (slots.length === 0) return [];
   const ids = slots.map(([, id]) => id!);
-  const info = await db.getAllAsync<{ id: number; name: string; effect: string | null; generation: number }>(
-    `SELECT a.id, n.name, p.short_effect AS effect, a.generation_id AS generation
+  const info = await db.getAllAsync<{
+    id: number;
+    identifier: string;
+    name: string;
+    effect: string | null;
+    generation: number;
+  }>(
+    `SELECT a.id, a.identifier, n.name, p.short_effect AS effect, a.generation_id AS generation
      FROM abilities a JOIN ability_names n ON n.ability_id = a.id
      LEFT JOIN ability_prose p ON p.ability_id = a.id
      WHERE a.id IN (${ids.map(() => '?').join(',')})`,
@@ -638,7 +668,7 @@ async function loadAbilitiesFor(
     const a = byId.get(id!);
     if (!a || a.generation > gen || seen.has(a.id)) return [];
     seen.add(a.id);
-    return [{ id: a.id, name: a.name, effect: a.effect, isHidden: slot === 3 }];
+    return [{ id: a.id, identifier: a.identifier, name: a.name, effect: a.effect, isHidden: slot === 3 }];
   });
 }
 

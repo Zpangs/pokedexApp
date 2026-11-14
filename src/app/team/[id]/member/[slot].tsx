@@ -18,7 +18,6 @@ import { TypeBadge } from '@/components/type-badge';
 import { TypeButton } from '@/components/types/type-button';
 import { Font, Spacing } from '@/constants/theme';
 import {
-  calcStat,
   type GameData,
   loadMegaDetails,
   MAX_EV,
@@ -26,11 +25,13 @@ import {
   MAX_IV,
   type MemberOptions,
   STAT_KEYS,
+  spreadStats,
   STAT_LABELS,
   statKey,
   type StatKey,
 } from '@/db/queries/team-builder';
 import type { BattleType } from '@/db/queries/types';
+import { loadIntoCalc, sideFromMember } from '@/db/calc-state';
 import { sprites } from '@/db/sprites';
 import { saveTeam, type Team, type TeamMember, updateMember, useTeam } from '@/db/teams';
 import { useGameData, useMemberOptions } from '@/hooks/use-team-data';
@@ -186,6 +187,15 @@ export default function MemberScreen() {
             <StatsSection team={team} slot={slot} member={member} data={data} options={options} />
 
             <View style={styles.footer}>
+              <ActionButton
+                label="Calculate damage"
+                icon={{ ios: 'flame.fill', android: 'calculate', web: 'calculate' }}
+                onPress={() => {
+                  loadIntoCalc(team.versionGroupId, 'attacker', sideFromMember(member, `From ${team.name}`));
+                  router.navigate('/calc');
+                }}
+                accessibilityHint="Opens the damage calculator with this Pokémon attacking"
+              />
               <ActionButton
                 destructive
                 label="Remove from team"
@@ -403,13 +413,8 @@ function StatsSection({
   const evTotal = STAT_KEYS.reduce((sum, k) => sum + member.evs[k], 0);
   const shedinja = data.pokemonById.get(member.pokemonId)?.identifier === 'shedinja';
 
-  const value = (k: StatKey) => {
-    // Gen I–II: DVs and stat experience at their maximum, as Showdown sets them
-    const ev = rules.spreads ? member.evs[k] : data.game.generation <= 2 ? MAX_EV : 0;
-    const iv = rules.spreads ? member.ivs[k] : data.game.generation <= 2 ? 30 : MAX_IV;
-    const mult = k === up ? 1.1 : k === down ? 0.9 : 1;
-    return calcStat(k, options.baseStats[k], member.level, ev, iv, mult, shedinja);
-  };
+  const totals = spreadStats(options.baseStats, member, data, shedinja);
+  const value = (k: StatKey) => totals[k];
   const setEv = (k: StatKey, n: number) => {
     const others = evTotal - member.evs[k];
     updateMember(team, slot, { evs: { ...member.evs, [k]: Math.min(n, MAX_EV_TOTAL - others) } });
@@ -633,5 +638,6 @@ const styles = StyleSheet.create({
   footer: {
     padding: Spacing.three,
     paddingTop: Spacing.four,
+    gap: Spacing.three,
   },
 });

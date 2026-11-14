@@ -47,6 +47,7 @@ export default function RootLayout() {
           <Stack.Screen name="team/[id]/index" />
           <Stack.Screen name="team/[id]/member/[slot]" />
           <Stack.Screen name="team/[id]/pick" />
+          <Stack.Screen name="calc/pick" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

@@ -13,6 +13,7 @@ type Section = { name: string; label: string; icon: SymbolViewProps['name'] };
 const SECTIONS: Section[] = [
   { name: 'index', label: 'Pokédex', icon: { ios: 'list.number', android: 'format_list_numbered', web: 'format_list_numbered' } },
   { name: 'teams', label: 'Teams', icon: { ios: 'person.3.fill', android: 'groups', web: 'groups' } },
+  { name: 'calc', label: 'Damage calc', icon: { ios: 'flame.fill', android: 'calculate', web: 'calculate' } },
   { name: 'moves', label: 'Moves', icon: { ios: 'bolt.fill', android: 'bolt', web: 'bolt' } },
   { name: 'abilities', label: 'Abilities', icon: { ios: 'sparkles', android: 'auto_awesome', web: 'auto_awesome' } },
   { name: 'items', label: 'Items', icon: { ios: 'bag.fill', android: 'backpack', web: 'backpack' } },
