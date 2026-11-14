@@ -6,7 +6,7 @@ import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-nat
 import { AbilityRow } from '@/components/abilities/ability-row';
 import { SearchBand } from '@/components/dex/search-band';
 import { Notice } from '@/components/notice';
-import { BottomTabInset, Font, Spacing } from '@/constants/theme';
+import { MenuButtonInset, Font, Spacing } from '@/constants/theme';
 import { type AbilitySummary, loadAbilities, matchesAbilityQuery } from '@/db/queries/abilities';
 import { queryWords } from '@/db/queries/national-dex';
 import { useTheme } from '@/hooks/use-theme';
@@ -123,7 +123,7 @@ export default function AbilitiesScreen() {
           keyboardShouldPersistTaps="handled"
           initialNumToRender={16}
           windowSize={11}
-          contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.three }}
+          contentContainerStyle={{ paddingBottom: MenuButtonInset + Spacing.three }}
         />
       )}
     </View>

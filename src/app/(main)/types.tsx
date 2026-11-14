@@ -9,7 +9,7 @@ import { Notice } from '@/components/notice';
 import { SectionSign } from '@/components/pokemon/section-sign';
 import { SignBand } from '@/components/sign-band';
 import { TypeButton } from '@/components/types/type-button';
-import { BottomTabInset, Font, Spacing } from '@/constants/theme';
+import { MenuButtonInset, Font, Spacing } from '@/constants/theme';
 import {
   type BattleType,
   loadNatures,
@@ -90,7 +90,7 @@ export default function TypesScreen() {
           data={rows}
           keyExtractor={(row) => row.key}
           stickyHeaderIndices={stickyIndices}
-          contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.three }}
+          contentContainerStyle={{ paddingBottom: MenuButtonInset + Spacing.three }}
           renderItem={({ item: row }) => {
             switch (row.kind) {
               case 'sign':

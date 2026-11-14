@@ -24,19 +24,30 @@ type Props = {
   trailing?: string;
   /** Spoken after the name and types, e.g. "level 36". */
   trailingLabel?: string;
+  /** Instead of opening the Pokémon's page (in pickers). */
+  onPress?: () => void;
+  accessibilityHint?: string;
 };
 
 /** A Pokémon in a list: sprite, name, number and types. Opens its page (on that form). */
-export const PokemonRow = memo(function PokemonRow({ pokemon, trailing, trailingLabel }: Props) {
+export const PokemonRow = memo(function PokemonRow({
+  pokemon,
+  trailing,
+  trailingLabel,
+  onPress,
+  accessibilityHint,
+}: Props) {
   const theme = useTheme();
   const form = pokemon.pokemonId === pokemon.number ? undefined : String(pokemon.pokemonId);
   const spoken = trailingLabel ?? trailing;
 
   return (
     <Pressable
-      onPress={() =>
-        router.push({ pathname: '/pokemon/[number]', params: { number: pokemon.number, form } })
+      onPress={
+        onPress ??
+        (() => router.push({ pathname: '/pokemon/[number]', params: { number: pokemon.number, form } }))
       }
+      accessibilityHint={accessibilityHint}
       style={({ pressed }) => [
         styles.row,
         { borderBottomColor: theme.rule },

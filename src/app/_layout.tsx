@@ -35,13 +35,18 @@ export default function RootLayout() {
         {/* The tabs, with full-screen detail pages pushed on top (system Back returns) */}
         <Stack
           screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
-          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(main)" />
           <Stack.Screen name="pokemon/[number]" />
           <Stack.Screen name="dex-picker" />
           <Stack.Screen name="move/[id]" />
           <Stack.Screen name="ability/[id]" />
           <Stack.Screen name="item/[id]" />
           <Stack.Screen name="type/[id]" />
+          <Stack.Screen name="team/new" />
+          <Stack.Screen name="team/import" />
+          <Stack.Screen name="team/[id]/index" />
+          <Stack.Screen name="team/[id]/member/[slot]" />
+          <Stack.Screen name="team/[id]/pick" />
         </Stack>
       </DatabaseProvider>
     </ThemeProvider>

@@ -4,124 +4,122 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { SearchBand } from '@/components/dex/search-band';
+import { ItemRow } from '@/components/items/item-row';
 import { Notice } from '@/components/notice';
-import { MoveRow } from '@/components/moves/move-row';
-import { BottomTabInset, Font, Spacing } from '@/constants/theme';
-import { loadMoves, matchesMoveQuery, type MoveSummary } from '@/db/queries/moves';
+import { MenuButtonInset, Font, Spacing } from '@/constants/theme';
+import { type ItemSummary, loadItems, matchesItemQuery } from '@/db/queries/items';
 import { queryWords } from '@/db/queries/national-dex';
 import { useTheme } from '@/hooks/use-theme';
 
-type Item =
-  | { kind: 'letter'; key: string; letter: string; count: number }
-  | { kind: 'move'; key: string; move: MoveSummary };
+type Row =
+  | { kind: 'pocket'; key: string; pocket: string; count: number }
+  | { kind: 'item'; key: string; item: ItemSummary };
 
-/** Every move A to Z, searchable by name, type and category. */
-export default function MovesScreen() {
+/** Every item by bag pocket, searchable by name, category and what it does. */
+export default function ItemsScreen() {
   const db = useSQLiteContext();
   const theme = useTheme();
   const { fontScale } = useWindowDimensions();
-  const [moves, setMoves] = useState<MoveSummary[] | null>(null);
+  const [items, setItems] = useState<ItemSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
 
   useEffect(() => {
-    loadMoves(db).then(setMoves, (e: unknown) => setError(String(e)));
+    loadItems(db).then(setItems, (e: unknown) => setError(String(e)));
   }, [db]);
 
   // Fixed heights keep scrolling and jumping cheap; they grow with the system font size.
-  // A row holds the name (24) over the facts (18); a sign holds one line (22).
+  // A row holds the name (24) over two lines of effect (20 each); a sign holds one line (22).
   const scale = Math.max(1, fontScale);
-  const rowHeight = Math.max(64, Math.ceil(42 * scale + 22));
+  const rowHeight = Math.max(84, Math.ceil(66 * scale + 18));
   const signHeight = Math.max(44, Math.ceil(22 * scale + 22));
 
-  const { items, stickyIndices, offsets, shown } = useMemo(() => {
+  const { rows, stickyIndices, offsets, shown } = useMemo(() => {
     const words = queryWords(deferredQuery);
-    const matches = (moves ?? []).filter((m) => words.length === 0 || matchesMoveQuery(m, words));
+    const matches = (items ?? []).filter((i) => words.length === 0 || matchesItemQuery(i, words));
 
-    // Letter signs, like the generation signs on the Dex tab
-    const byLetter = new Map<string, MoveSummary[]>();
-    for (const move of matches) {
-      const first = move.searchName[0]?.toUpperCase() ?? '#';
-      const letter = /[A-Z]/.test(first) ? first : '#';
-      byLetter.set(letter, [...(byLetter.get(letter) ?? []), move]);
-    }
-
-    const items: Item[] = [];
+    // Pocket signs, like the bag in the games (items arrive sorted by pocket)
+    const rows: Row[] = [];
     const stickyIndices: number[] = [];
-    for (const [letter, list] of byLetter) {
-      stickyIndices.push(items.length);
-      items.push({ kind: 'letter', key: `l-${letter}`, letter, count: list.length });
-      for (const move of list) items.push({ kind: 'move', key: `m-${move.id}`, move });
+    let sign = null as Extract<Row, { kind: 'pocket' }> | null;
+    for (const item of matches) {
+      if (sign?.pocket !== item.pocket) {
+        stickyIndices.push(rows.length);
+        sign = { kind: 'pocket', key: `p-${item.pocket}`, pocket: item.pocket, count: 0 };
+        rows.push(sign);
+      }
+      sign.count++;
+      rows.push({ kind: 'item', key: `i-${item.id}`, item });
     }
 
     const offsets: number[] = [];
     let y = 0;
-    for (const item of items) {
+    for (const row of rows) {
       offsets.push(y);
-      y += item.kind === 'letter' ? signHeight : rowHeight;
+      y += row.kind === 'pocket' ? signHeight : rowHeight;
     }
-    return { items, stickyIndices, offsets, shown: matches.length };
-  }, [moves, deferredQuery, rowHeight, signHeight]);
+    return { rows, stickyIndices, offsets, shown: matches.length };
+  }, [items, deferredQuery, rowHeight, signHeight]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
       <StatusBar style="light" />
       <SearchBand
-        title="Moves"
-        noun="moves"
-        placeholder="Name, type or category"
-        searchLabel="Search moves by name, type or category"
+        title="Items"
+        noun="items"
+        placeholder="Name, kind or effect"
+        searchLabel="Search items by name, kind or effect"
         query={query}
         onChangeQuery={setQuery}
-        total={moves?.length}
+        total={items?.length}
         shown={shown}
       />
 
-      {!moves && !error ? null : error ? (
+      {!items && !error ? null : error ? (
         <Notice
           icon={{ ios: 'exclamationmark.triangle', android: 'error', web: 'error' }}
-          title="The move data didn't load"
+          title="The item data didn't load"
           body={`Rebuild it with npm run build-db, then restart the app. (${error})`}
         />
-      ) : items.length === 0 ? (
+      ) : rows.length === 0 ? (
         <Notice
           icon={{ ios: 'magnifyingglass', android: 'search_off', web: 'search_off' }}
-          title={`No moves match “${query.trim()}”`}
-          body="Try part of a name, a type like fire, or a category like special. Combine them to narrow down, like “fire special”."
+          title={`No items match “${query.trim()}”`}
+          body="Try part of a name, a kind like berry or evolution, or a word from what it does, like paralysis. Combine words to narrow down, like “berry hp”."
         />
       ) : (
         <FlatList
           // Sticky headers must not shift inside a mounted list on Android (see the Dex tab)
           key={stickyIndices.join(',')}
           removeClippedSubviews={false}
-          data={items}
+          data={rows}
           keyExtractor={(item) => item.key}
           renderItem={({ item }) =>
-            item.kind === 'letter' ? (
+            item.kind === 'pocket' ? (
               <View
                 style={[styles.sign, { height: signHeight, backgroundColor: theme.panel }]}
                 accessible
                 accessibilityRole="header"
-                accessibilityLabel={`${item.letter}, ${item.count} moves`}>
-                <Text style={[styles.letter, { color: theme.onPanelAccent }]}>{item.letter}</Text>
+                accessibilityLabel={`${item.pocket}, ${item.count} ${item.count === 1 ? 'item' : 'items'}`}>
+                <Text style={[styles.pocket, { color: theme.onPanelAccent }]}>{item.pocket}</Text>
                 <Text style={[styles.count, { color: theme.onPanelSecondary }]}>{item.count}</Text>
               </View>
             ) : (
-              <MoveRow move={item.move} height={rowHeight} />
+              <ItemRow item={item.item} height={rowHeight} />
             )
           }
           getItemLayout={(_, index) => ({
             index,
             offset: offsets[index] ?? 0,
-            length: items[index]?.kind === 'letter' ? signHeight : rowHeight,
+            length: rows[index]?.kind === 'pocket' ? signHeight : rowHeight,
           })}
           stickyHeaderIndices={stickyIndices}
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="handled"
           initialNumToRender={16}
           windowSize={11}
-          contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.three }}
+          contentContainerStyle={{ paddingBottom: MenuButtonInset + Spacing.three }}
         />
       )}
     </View>
@@ -138,7 +136,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
   },
-  letter: {
+  pocket: {
     fontFamily: Font.extraBold,
     fontSize: 17,
     lineHeight: 22,

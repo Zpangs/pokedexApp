@@ -8,7 +8,7 @@ import { DexRow } from '@/components/dex/dex-row';
 import { GenerationSign } from '@/components/dex/generation-sign';
 import { SearchBand } from '@/components/dex/search-band';
 import { Notice } from '@/components/notice';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { MenuButtonInset, Spacing } from '@/constants/theme';
 import {
   type DexEntry,
   type DexGeneration,
@@ -184,7 +184,7 @@ export default function DexScreen() {
           keyboardShouldPersistTaps="handled"
           initialNumToRender={14}
           windowSize={11}
-          contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.three }}
+          contentContainerStyle={{ paddingBottom: MenuButtonInset + Spacing.three }}
         />
       )}
     </View>

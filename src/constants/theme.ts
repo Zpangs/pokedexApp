@@ -102,5 +102,7 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/** The floating menu button's size, and the space lists leave below their last row to clear it. */
+export const MenuButtonSize = 56;
+export const MenuButtonInset = MenuButtonSize + Spacing.three * 2;
 export const MaxContentWidth = 800;

@@ -156,6 +156,7 @@ export type Nature = {
   lowers: string | null;
   /** The stat it raises, for grouping ("attack"…); null when neutral. */
   raisesId: string | null;
+  lowersId: string | null;
   /** Berry flavors, for berries that confuse a Pokémon that dislikes them. */
   likes: string | null;
   dislikes: string | null;
@@ -205,6 +206,7 @@ export async function loadNatures(db: SQLiteDatabase): Promise<Nature[]> {
       raises: neutral ? null : statLabel(r.raises),
       lowers: neutral ? null : statLabel(r.lowers),
       raisesId: neutral ? null : r.raises,
+      lowersId: neutral ? null : r.lowers,
       likes: neutral ? null : (FLAVORS[r.likes] ?? null),
       dislikes: neutral ? null : (FLAVORS[r.hates] ?? null),
     };
