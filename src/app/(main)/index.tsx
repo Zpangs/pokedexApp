@@ -5,13 +5,16 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { DexRow } from '@/components/dex/dex-row';
+import { FilterChips, MAX_TYPES } from '@/components/dex/filter-chips';
 import { GenerationSign } from '@/components/dex/generation-sign';
 import { SearchBand } from '@/components/dex/search-band';
 import { Notice } from '@/components/notice';
 import { MenuButtonInset, Spacing } from '@/constants/theme';
+import { TypeColors } from '@/constants/types';
 import {
   type DexEntry,
   type DexGeneration,
+  type DexType,
   loadNationalDex,
   matchesQuery,
   queryWords,
@@ -66,6 +69,17 @@ function DexScreenContent() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
+  // Type identifiers, in the order picked; Pokémon must have all of them
+  const [types, setTypes] = useState<string[]>([]);
+  const [generation, setGeneration] = useState<number | null>(null);
+
+  const toggleType = (identifier: string) =>
+    setTypes((current) =>
+      current.includes(identifier)
+        ? current.filter((t) => t !== identifier)
+        : // A third type replaces the first one picked
+          [...current, identifier].slice(-MAX_TYPES)
+    );
 
   useEffect(() => {
     loadPokedexes(db).then(setOptions, () => {});
@@ -87,6 +101,19 @@ function DexScreenContent() {
   // An unknown id (a dex removed from the data) falls back to the National Dex's name
   const option = options.find((o) => o.id === selectedId);
   const regional = selectedId !== NATIONAL_DEX_ID;
+  // A generation filter only means something on the National Dex
+  const generationFilter = dex?.generations ? generation : null;
+  const filtered = types.length > 0 || generationFilter !== null;
+
+  // The types this dex has, in the usual type order
+  const dexTypes = useMemo(() => {
+    const byId = new Map<string, DexType>();
+    for (const e of dex?.entries ?? []) for (const t of e.types) byId.set(t.identifier, t);
+    const order = Object.keys(TypeColors);
+    return [...byId.values()].sort(
+      (a, b) => order.indexOf(a.identifier) - order.indexOf(b.identifier)
+    );
+  }, [dex]);
 
   // Fixed heights keep scrolling and jumping cheap. They grow with the system font size:
   // a row holds the name (24) over the badges (16), and a sign holds one line (22).
@@ -96,22 +123,26 @@ function DexScreenContent() {
 
   const { items, stickyIndices, offsets, shown } = useMemo(() => {
     const words = queryWords(deferredQuery);
-    const searching = words.length > 0;
+    const searching = words.length > 0 || types.length > 0;
+    const matches = (e: DexEntry) =>
+      (words.length === 0 || matchesQuery(e, words)) &&
+      types.every((t) => e.types.some((et) => et.identifier === t));
     const items: Item[] = [];
     const stickyIndices: number[] = [];
     let shown = 0;
 
     if (dex && !dex.generations) {
       for (const entry of dex.entries) {
-        if (searching && !matchesQuery(entry, words)) continue;
+        if (searching && !matches(entry)) continue;
         shown += 1;
         items.push({ kind: 'entry', key: `p-${entry.dexNumber}-${entry.number}`, entry });
       }
     }
 
     for (const generation of dex?.generations ?? []) {
+      if (generationFilter !== null && generation.id !== generationFilter) continue;
       const entries = (dex?.entries ?? []).filter(
-        (e) => e.generationId === generation.id && (!searching || matchesQuery(e, words))
+        (e) => e.generationId === generation.id && (!searching || matches(e))
       );
       if (entries.length === 0) continue;
       shown += entries.length;
@@ -132,7 +163,7 @@ function DexScreenContent() {
       y += item.kind === 'generation' ? signHeight : rowHeight;
     }
     return { items, stickyIndices, offsets, shown };
-  }, [dex, deferredQuery, rowHeight, signHeight]);
+  }, [dex, deferredQuery, types, generationFilter, rowHeight, signHeight]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -145,7 +176,22 @@ function DexScreenContent() {
         onChangeQuery={setQuery}
         total={dex?.entries.length}
         shown={shown}
-      />
+        filtered={filtered}>
+        {dex ? (
+          <FilterChips
+            types={dexTypes}
+            selectedTypes={types}
+            onToggleType={toggleType}
+            generations={dex.generations}
+            selectedGeneration={generationFilter}
+            onSelectGeneration={setGeneration}
+            onClear={() => {
+              setTypes([]);
+              setGeneration(null);
+            }}
+          />
+        ) : null}
+      </SearchBand>
 
       {!dex && !error ? null : error ? (
         <Notice
@@ -156,8 +202,14 @@ function DexScreenContent() {
       ) : dex && items.length === 0 ? (
         <Notice
           icon={{ ios: 'magnifyingglass', android: 'search_off', web: 'search_off' }}
-          title={`No Pokémon match “${query.trim()}”`}
-          body="Try part of a name, a number like 25, or a type like fire. Combine them to narrow down, like “fire fly”."
+          title={
+            query.trim() ? `No Pokémon match “${query.trim()}”` : 'No Pokémon match these filters'
+          }
+          body={
+            filtered
+              ? 'Try fewer filters, or tap Clear to show everything.'
+              : 'Try part of a name, a number like 25, or a type like fire. Combine them to narrow down, like “fire fly”.'
+          }
         />
       ) : (
         <FlatList

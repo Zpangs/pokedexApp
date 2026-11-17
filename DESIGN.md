@@ -308,6 +308,9 @@ The red-to-blue gradient band that names the screen. It runs under the status ba
 ### Search field
 A square sign-black field set into the gradient band, at least 52dp tall, with a white 24dp search pictogram, white medium 17dp input text, a panel-grey placeholder ("Name, number or type") and a panel-red cursor. A 48dp clear button appears while there is a query.
 
+### Filter chips
+Under the Dex search field, set into the band: a row of the dex's types (in type order) and, on the National Dex only, a row of generations. Unselected chips are a 1.5dp white outline with white bold 14dp text; a selected type fills with its type color and a 2dp white edge (the Band Outline Rule), and a selected generation fills sign black. Up to two types (a Pokémon must have both; a third replaces the first) and one generation. A sign-black Clear chip leads the type row and stays put at 40% opacity while nothing is on, so chips never shift under the thumb. Filters combine with the search text, and the count reads "8 of 1,025".
+
 ### Panel signs (gate sign, section sign)
 Full-width square panels in sign black (light) or panel frame (dark). The title is extra-bold panel red; the detail sits right-aligned in panel-grey label type. Gate signs show "Gen I" in panel red, the region in white bold, then the range "0001–0151" or "N found". Section signs wrap their detail onto its own line at large text sizes. Both are accessibility headers.
 

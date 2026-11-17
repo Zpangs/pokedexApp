@@ -1,4 +1,5 @@
 import { SymbolView } from 'expo-symbols';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +23,10 @@ type Props = {
   /** Undefined while the Dex is still loading. */
   total: number | undefined;
   shown: number;
+  /** Filters narrow the list like a search does, so the count shows "12 of 1,025". */
+  filtered?: boolean;
+  /** Under the search field, e.g. filter chips. */
+  children?: ReactNode;
 };
 
 /** The yellow sign band at the top: title, count and the search field. */
@@ -36,6 +41,8 @@ export function SearchBand({
   onChangeQuery,
   total,
   shown,
+  filtered = false,
+  children,
 }: Props) {
   const theme = useSignTheme();
   const insets = useSafeAreaInsets();
@@ -68,7 +75,7 @@ export function SearchBand({
         )}
         {total !== undefined && (
           <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
-            {searching
+            {searching || filtered
               ? `${shown.toLocaleString()} of ${total.toLocaleString()}`
               : `${total.toLocaleString()} ${noun}`}
           </Text>
@@ -114,6 +121,7 @@ export function SearchBand({
           </Pressable>
         )}
       </View>
+      {children}
     </SignBand>
   );
 }
