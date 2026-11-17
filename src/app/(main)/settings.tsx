@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SectionSign } from '@/components/pokemon/section-sign';
+import { OfflinePack } from '@/components/settings/offline-pack';
 import { SignBand } from '@/components/sign-band';
 import { Font, MenuButtonInset, Spacing } from '@/constants/theme';
 import { type MenuSide, setMenuSide, useMenuSide } from '@/hooks/use-menu-side';
@@ -64,6 +65,16 @@ export default function SettingsScreen() {
               </Pressable>
             );
           })}
+        </View>
+
+        <SectionSign title="Offline images" />
+        <View style={styles.body}>
+          <Text style={[styles.note, { color: theme.textSecondary }]}>
+            Everything else already works offline. Download the pictures too, so they show up
+            with no signal. Keep the app open while it downloads.
+          </Text>
+          <OfflinePack pack="small" />
+          <OfflinePack pack="artwork" />
         </View>
       </ScrollView>
     </View>

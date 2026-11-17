@@ -17,7 +17,7 @@ It's built for one player's own lookups: offline, complete across every generati
 
 ## Operating Context
 - Used mid-game, often while holding a console or with the game on a TV, so lookups are short and interrupted.
-- Works fully offline from a bundled SQLite database built from PokéAPI (`npm run build-db`). Images come from the PokeAPI/sprites repo, load over the network and are cached on the device.
+- Works fully offline from a bundled SQLite database built from PokéAPI (`npm run build-db`). Images come from the PokeAPI/sprites repo and load over the network, unless their pack (sprites and item icons, or official artwork) has been downloaded to the device from Settings.
 - Built in Expo / React Native with TypeScript and Expo Router.
 
 ## Capabilities and Constraints
