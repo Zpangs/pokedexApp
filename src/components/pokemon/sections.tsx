@@ -1,8 +1,15 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
-import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  type ScrollViewInstance,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { MoveRow } from '@/components/moves/move-row';
 import { TypeBadge } from '@/components/type-badge';
@@ -253,7 +260,14 @@ export function EvolutionSection({ stages: chain, current }: EvolutionProps) {
 const GAMES_SHOWN = 4;
 const LOCATIONS_SHOWN = 6;
 
-export function EncountersSection({ encounters }: { encounters: Encounter[] }) {
+/** `preferred`: the selected dex's games (`version_groups.id`), listed first in that order. */
+export function EncountersSection({
+  encounters,
+  preferred = [],
+}: {
+  encounters: Encounter[];
+  preferred?: number[];
+}) {
   const [showAllGames, setShowAllGames] = useState(false);
   if (encounters.length === 0) {
     return (
@@ -277,9 +291,14 @@ export function EncountersSection({ encounters }: { encounters: Encounter[] }) {
     if (group) group.names.push(version);
     else bySignature.set(signature, { names: [version], list });
   }
-  const versions = [...bySignature.values()].map(
-    (g) => [mergeVersionNames(g.names), g.list] as const
-  );
+  // Newest first, but the selected dex's games lead (the sort is stable)
+  const rank = (list: Encounter[]) => {
+    const i = preferred.indexOf(list[0].versionGroupId);
+    return i === -1 ? preferred.length : i;
+  };
+  const versions = [...bySignature.values()]
+    .sort((a, b) => rank(a.list) - rank(b.list))
+    .map((g) => [mergeVersionNames(g.names), g.list] as const);
   const shown = showAllGames ? versions : versions.slice(0, GAMES_SHOWN);
 
   return (
@@ -353,8 +372,18 @@ export function GamePicker({
   onSelect: (versionGroupId: number) => void;
 }) {
   const theme = useSignTheme();
+  // The default game can be an older one far down the row (FireRed/LeafGreen for Kanto);
+  // bring it into view once its chip has been laid out
+  const scroller = useRef<ScrollViewInstance>(null);
+  const [selectedX, setSelectedX] = useState<number | null>(null);
+  useEffect(() => {
+    if (selectedX === null) return;
+    scroller.current?.scrollTo({ x: Math.max(0, selectedX - Spacing.three), animated: false });
+  }, [selectedX]);
+
   return (
     <ScrollView
+      ref={scroller}
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.games}>
@@ -363,6 +392,7 @@ export function GamePicker({
         return (
           <Pressable
             key={g.versionGroupId}
+            onLayout={on ? (e) => setSelectedX((x) => x ?? e.nativeEvent.layout.x) : undefined}
             onPress={() => onSelect(g.versionGroupId)}
             style={[
               styles.chip,

@@ -22,6 +22,7 @@ import {
 } from '@/components/pokemon/sections';
 import { Font, Spacing } from '@/constants/theme';
 import { formatDexNumber, plural } from '@/db/queries/national-dex';
+import { loadDexVersionGroups } from '@/db/queries/pokedexes';
 import {
   type Encounter,
   type EvolutionStage,
@@ -37,6 +38,7 @@ import {
   type SpeciesInfo,
 } from '@/db/queries/pokemon-detail';
 import { DexThemeScope } from '@/hooks/use-dex-theme';
+import { useSelectedDex } from '@/hooks/use-selected-dex';
 import { useTheme } from '@/hooks/use-theme';
 
 /** Pokémon Champions only has training moves; prefer a main-series game when picking a default. */
@@ -61,6 +63,7 @@ function PokemonScreenContent() {
   const db = useSQLiteContext();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const selectedDex = useSelectedDex();
 
   // undefined while loading, null when there's no such Pokémon
   const [species, setSpecies] = useState<SpeciesInfo | null | undefined>(undefined);
@@ -70,6 +73,8 @@ function PokemonScreenContent() {
   const [encounters, setEncounters] = useState<Encounter[]>([]);
   const [games, setGames] = useState<GameOption[]>([]);
   const [game, setGame] = useState<number | null>(null);
+  // The selected dex's games, newest first: they open the Moves section and lead Where to find
+  const [dexGames, setDexGames] = useState<number[]>([]);
   const [moves, setMoves] = useState<LearnedMove[] | null>(null);
   const [bandHeight, setBandHeight] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
@@ -107,21 +112,27 @@ function PokemonScreenContent() {
       loadForm(db, pokemonId),
       loadEncounters(db, pokemonId),
       loadLearnsetGames(db, pokemonId),
-    ]).then(([f, e, g]) => {
+      loadDexVersionGroups(db, selectedDex),
+    ]).then(([f, e, g, d]) => {
       if (!live) return;
       setForm(f);
       setEncounters(e);
       setGames(g);
+      setDexGames(d);
+      // Keep the game when switching forms; otherwise the dex's newest game with a learnset
+      // (Legends: Z-A and the DLCs have none), then the newest main-series game
       setGame((current) =>
         g.some((x) => x.versionGroupId === current)
           ? current
-          : (g.find((x) => !NOT_A_DEFAULT_GAME.has(x.name)) ?? g[0])?.versionGroupId ?? null
+          : (d.map((id) => g.find((x) => x.versionGroupId === id)).find(Boolean) ??
+              g.find((x) => !NOT_A_DEFAULT_GAME.has(x.name)) ??
+              g[0])?.versionGroupId ?? null
       );
     });
     return () => {
       live = false;
     };
-  }, [db, pokemonId]);
+  }, [db, pokemonId, selectedDex]);
 
   useEffect(() => {
     if (pokemonId === null || game === null) return;
@@ -208,7 +219,7 @@ function PokemonScreenContent() {
                 : undefined
             }
           />,
-          <EncountersSection key="b-loc" encounters={encounters} />,
+          <EncountersSection key="b-loc" encounters={encounters} preferred={dexGames} />,
 
           <SectionSign key="s-moves" title="Moves" detail={gameName} />,
           <View key="b-moves">

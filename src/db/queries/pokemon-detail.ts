@@ -64,6 +64,7 @@ export type EvolutionStage = {
 
 export type Encounter = {
   version: string;
+  versionGroupId: number;
   versionGroupOrder: number;
   location: string;
   minLevel: number;
@@ -471,14 +472,16 @@ function describeEvolution(r: EvolutionRow) {
 export async function loadEncounters(db: SQLiteDatabase, pokemonId: number): Promise<Encounter[]> {
   const rows = await db.getAllAsync<{
     version: string;
+    versionGroupId: number;
     versionGroupOrder: number;
-    location: string;
+    location: string | null;
+    locationIdentifier: string;
     area: string | null;
     minLevel: number;
     maxLevel: number;
   }>(
-    `SELECT vn.name AS version, vg."order" AS versionGroupOrder,
-            COALESCE(ln.name, l.identifier) AS location, lap.name AS area,
+    `SELECT vn.name AS version, vg.id AS versionGroupId, vg."order" AS versionGroupOrder,
+            ln.name AS location, l.identifier AS locationIdentifier, lap.name AS area,
             MIN(e.min_level) AS minLevel, MAX(e.max_level) AS maxLevel
      FROM encounters e
      JOIN versions v ON v.id = e.version_id
@@ -495,8 +498,8 @@ export async function loadEncounters(db: SQLiteDatabase, pokemonId: number): Pro
   );
   // Areas that end up with the same label (two parts of one route) become one line
   const merged = new Map<string, Encounter>();
-  for (const { area, ...r } of rows) {
-    const location = locationLabel(r.location, area);
+  for (const { area, locationIdentifier, ...r } of rows) {
+    const location = locationLabel(r.location ?? unnamedLocation(locationIdentifier), area);
     const key = `${r.version}\u0000${location}`;
     const seen = merged.get(key);
     if (seen) {
@@ -507,6 +510,24 @@ export async function loadEncounters(db: SQLiteDatabase, pokemonId: number): Pro
     }
   }
   return [...merged.values()];
+}
+
+/** Locations PokéAPI has encounters for but no English name. */
+const LOCATION_NAMES: Record<string, string> = {
+  'kanto-pokecenter': 'Kanto Pokémon Center',
+  'hoenn-pokecenter': 'Hoenn Pokémon Center',
+  'johto-pokemart': 'Johto Poké Mart',
+  'sinnoh-pokemart': 'Sinnoh Poké Mart',
+  'mirage-island': 'Mirage Island',
+  'kalos-berry-fields': 'Kalos Berry Fields',
+};
+
+/** A readable name for a location without one: "some-new-place" → "Some New Place". */
+function unnamedLocation(identifier: string) {
+  return (
+    LOCATION_NAMES[identifier] ??
+    identifier.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  );
 }
 
 /**

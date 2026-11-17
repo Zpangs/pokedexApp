@@ -107,6 +107,18 @@ export async function loadPokedexes(db: SQLiteDatabase): Promise<PokedexOption[]
   return options.sort((a, b) => a.order - b.order || a.option.id - b.option.id).map((o) => o.option);
 }
 
+/** The games (`version_groups.id`) that use a dex, newest first. None for the National Dex. */
+export async function loadDexVersionGroups(db: SQLiteDatabase, pokedexId: number): Promise<number[]> {
+  const rows = await db.getAllAsync<{ id: number; identifier: string }>(
+    `SELECT vg.id, vg.identifier FROM pokedex_version_groups pvg
+     JOIN version_groups vg ON vg.id = pvg.version_group_id
+     WHERE pvg.pokedex_id = ?
+     ORDER BY vg."order" DESC`,
+    pokedexId
+  );
+  return rows.filter((r) => !HIDDEN_VERSION_GROUPS.has(r.identifier)).map((r) => r.id);
+}
+
 type EntryRow = {
   dex_number: number;
   number: number;
