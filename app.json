@@ -18,7 +18,10 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.thadex.app"
+      "package": "com.thadex.app",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "output": "server",
@@ -34,7 +37,8 @@
           "imageWidth": 120
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -45,6 +49,9 @@
         "projectId": "fdcd72b0-0f78-4d79-b66e-f56dee340ac4"
       }
     },
-    "owner": "zpangs"
+    "owner": "zpangs",
+    "updates": {
+      "url": "https://u.expo.dev/fdcd72b0-0f78-4d79-b66e-f56dee340ac4"
+    }
   }
 }
