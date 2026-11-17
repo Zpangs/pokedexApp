@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Font, MenuButtonSize, Spacing } from '@/constants/theme';
+import { DexThemeScope, useSignTheme } from '@/hooks/use-dex-theme';
 import { useMenuSide } from '@/hooks/use-menu-side';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -36,12 +37,16 @@ export function AppDrawer() {
   return (
     <Drawer
       drawerContent={(props) => <MenuContent {...props} />}
-      screenLayout={({ children, navigation }) => (
-        <View style={styles.screen}>
-          {children}
-          <MenuButton side={side} onPress={() => navigation.openDrawer()} />
-        </View>
-      )}
+      screenLayout={({ children, navigation, route }) => {
+        const button = <MenuButton side={side} onPress={() => navigation.openDrawer()} />;
+        return (
+          <View style={styles.screen}>
+            {children}
+            {/* On the Dex tab the button takes the selected Pokédex's colour */}
+            {route.name === 'index' ? <DexThemeScope>{button}</DexThemeScope> : button}
+          </View>
+        );
+      }}
       screenOptions={{
         headerShown: false,
         drawerPosition: side,
@@ -58,7 +63,7 @@ export function AppDrawer() {
 }
 
 function MenuButton({ side, onPress }: { side: 'left' | 'right'; onPress: () => void }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const insets = useSafeAreaInsets();
   return (
     <Pressable

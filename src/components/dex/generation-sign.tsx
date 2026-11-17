@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Font, Spacing } from '@/constants/theme';
 import { type DexGeneration, formatDexNumber } from '@/db/queries/national-dex';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 type Props = { generation: DexGeneration; height: number; matches?: number };
 
@@ -12,7 +12,7 @@ type Props = { generation: DexGeneration; height: number; matches?: number };
  * so you always know which generation you're scrolling through.
  */
 export const GenerationSign = memo(function GenerationSign({ generation, height, matches }: Props) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const range = `${formatDexNumber(generation.first)}–${formatDexNumber(generation.last)}`;
   const detail = matches === undefined ? range : `${matches} found`;
   const spokenDetail =

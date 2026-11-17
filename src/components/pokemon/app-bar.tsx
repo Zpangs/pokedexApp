@@ -5,18 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SignBand } from '@/components/sign-band';
 import { Font, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 /**
  * The fixed yellow bar above a Pokémon's page: Back, plus the Pokémon's number and name once
  * the identity band has scrolled away, so you always know whose page you're on.
  */
 export function AppBar({ title, showTitle }: { title: string; showTitle: boolean }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <SignBand style={[styles.bar, { paddingTop: insets.top }]}>
+    <SignBand colors={theme.gradient} style={[styles.bar, { paddingTop: insets.top }]}>
       <Pressable
         onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         style={({ pressed }) => [styles.back, pressed && { opacity: 0.6 }]}

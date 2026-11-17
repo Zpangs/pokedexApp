@@ -225,6 +225,9 @@ The red-to-blue sign gradient and sign black do all the identity work; greys car
 - **Panel Red** (panel-red): A light red that stays readable on black: titles on panel signs, the cursor and selection color in the search field, and the highest stat bar in dark mode.
 - **Sign Black** (sign-black): The search field set into the band, panel signs and the navigation bar in light mode, the selected form chip, the ground in dark mode, and the highest stat bar in light mode.
 
+### Dex palettes
+On the Dex list, the dex picker and a Pokémon's page, the signs take the selected Pokédex's colours instead: the gradient runs between its paired versions (Gold → Silver, Sword → Shield, Scarlet → Violet), the left colour becomes the solid accent (menu button, selected game chip), and a light tint of it letters the panel signs (and the top stat bar in dark mode). The National Dex keeps red-to-blue. Every stop and the gradient's midpoint holds AA for white text; panel tints hold 6:1 on the panel. The palettes live in `src/constants/dex-palettes.ts`; screens opt in with `DexThemeScope`, and every other tab keeps red-to-blue. The dex picker shows each dex's gradient as a stripe at the row's left edge.
+
 ### Neutral
 - **Panel Frame** (panel-frame): Panel signs and the navigation bar in dark mode, and raised element backgrounds in dark mode, so a sign keeps its edge against the sign-black ground.
 - **Sign White** (sign-white): The light-mode ground, primary text in dark mode, ink on the gradient band (title, count, number, name, genus, Back, form chips and the badge outline), and text and pictograms on panels and in the search field.

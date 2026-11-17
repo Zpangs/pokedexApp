@@ -8,7 +8,7 @@ import { formatDexNumber } from '@/db/queries/national-dex';
 import type { DexType } from '@/db/queries/national-dex';
 import type { Variety } from '@/db/queries/pokemon-detail';
 import { sprites } from '@/db/sprites';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 type Props = {
   number: number;
@@ -22,10 +22,10 @@ type Props = {
 
 /** The yellow band at the top of a Pokémon's page: number, name, types, artwork and forms. */
 export function IdentityBand({ number, name, genus, types, pokemonId, varieties, onSelectVariety }: Props) {
-  const theme = useTheme();
+  const theme = useSignTheme();
 
   return (
-    <SignBand style={styles.band}>
+    <SignBand colors={theme.gradient} style={styles.band}>
       <View style={styles.top}>
         <View style={styles.text}>
           <Text

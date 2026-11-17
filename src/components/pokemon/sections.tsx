@@ -20,7 +20,7 @@ import {
   type Stat,
 } from '@/db/queries/pokemon-detail';
 import { sprites } from '@/db/sprites';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 /* ---------- Shared pieces ---------- */
 
@@ -29,12 +29,12 @@ export function SectionBody({ children }: { children: ReactNode }) {
 }
 
 export function Quiet({ children }: { children: ReactNode }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return <Text style={[styles.quiet, { color: theme.textSecondary }]}>{children}</Text>;
 }
 
 function MoreButton({ label, onPress }: { label: string; onPress: () => void }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -74,7 +74,7 @@ export function MatchupsSection({ matchups }: { matchups: Matchup[] }) {
 }
 
 function LabeledBadges({ label, children }: { label: string; children: ReactNode }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return (
     <View style={styles.group}>
       <Text style={[styles.groupLabel, { color: theme.textSecondary }]}>{label}</Text>
@@ -86,7 +86,7 @@ function LabeledBadges({ label, children }: { label: string; children: ReactNode
 /* ---------- Abilities ---------- */
 
 export function AbilitiesSection({ abilities }: { abilities: Ability[] }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return (
     <SectionBody>
       {abilities.map((a) => (
@@ -131,7 +131,7 @@ export function AbilitiesSection({ abilities }: { abilities: Ability[] }) {
 const STAT_MAX = 255;
 
 export function StatsSection({ stats }: { stats: Stat[] }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const top = Math.max(...stats.map((s) => s.value));
   return (
     <SectionBody>
@@ -174,7 +174,7 @@ type EvolutionProps = {
 };
 
 export function EvolutionSection({ stages: chain, current }: EvolutionProps) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   if (chain.length <= 1) {
     return (
       <SectionBody>
@@ -309,7 +309,7 @@ function mergeVersionNames(names: string[]) {
 }
 
 function VersionLocations({ version, list }: { version: string; list: Encounter[] }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? list : list.slice(0, LOCATIONS_SHOWN);
   return (
@@ -352,7 +352,7 @@ export function GamePicker({
   selected: number | null;
   onSelect: (versionGroupId: number) => void;
 }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return (
     <ScrollView
       horizontal
@@ -383,7 +383,7 @@ export function GamePicker({
 }
 
 export function MovesSection({ moves }: { moves: LearnedMove[] | null }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   if (moves === null) return null;
   if (moves.length === 0) {
     return (
@@ -438,7 +438,7 @@ export function AboutSection({
   height?: number;
   weight?: number;
 }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const status = species.isMythical
     ? 'Mythical'
     : species.isLegendary

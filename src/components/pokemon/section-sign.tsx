@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Font, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 /** A panel sign heading a section of the detail page. Sticks to the top while you scroll it. */
 export function SectionSign({ title, detail }: { title: string; detail?: string }) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   return (
     <View
       style={[styles.sign, { backgroundColor: theme.panel }]}

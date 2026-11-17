@@ -36,6 +36,7 @@ import {
   type PokemonForm,
   type SpeciesInfo,
 } from '@/db/queries/pokemon-detail';
+import { DexThemeScope } from '@/hooks/use-dex-theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /** Pokémon Champions only has training moves; prefer a main-series game when picking a default. */
@@ -44,7 +45,16 @@ const NOT_A_DEFAULT_GAME = new Set(['Champions']);
 /** The section signs' positions among the scroll view's children; they stick while scrolling. */
 const STICKY_SIGNS = [1, 3, 5, 7, 9, 11, 13];
 
+/** Signs on this screen take the selected Pokédex's colours. */
 export default function PokemonScreen() {
+  return (
+    <DexThemeScope>
+      <PokemonScreenContent />
+    </DexThemeScope>
+  );
+}
+
+function PokemonScreenContent() {
   // `form` is a `pokemon.id` to open on, e.g. Alolan Raichu from the Alola Dex
   const { number: param, form: formParam } = useLocalSearchParams<{ number: string; form?: string }>();
   const number = Number(param);

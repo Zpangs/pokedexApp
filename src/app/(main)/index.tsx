@@ -23,6 +23,7 @@ import {
   type PokedexOption,
 } from '@/db/queries/pokedexes';
 import { useSelectedDex } from '@/hooks/use-selected-dex';
+import { DexThemeScope } from '@/hooks/use-dex-theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Item =
@@ -46,7 +47,16 @@ async function loadDex(db: SQLiteDatabase, id: number): Promise<Dex> {
   return dex;
 }
 
+/** Signs on this screen take the selected Pokédex's colours. */
 export default function DexScreen() {
+  return (
+    <DexThemeScope>
+      <DexScreenContent />
+    </DexThemeScope>
+  );
+}
+
+function DexScreenContent() {
   const db = useSQLiteContext();
   const theme = useTheme();
   const { fontScale } = useWindowDimensions();

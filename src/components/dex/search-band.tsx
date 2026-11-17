@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SignBand } from '@/components/sign-band';
 import { Font, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useSignTheme } from '@/hooks/use-dex-theme';
 
 type Props = {
   /** "National Dex", "Paldea Dex"… Tapping it opens the Pokédex picker. */
@@ -37,12 +37,12 @@ export function SearchBand({
   total,
   shown,
 }: Props) {
-  const theme = useTheme();
+  const theme = useSignTheme();
   const insets = useSafeAreaInsets();
   const searching = query.trim().length > 0;
 
   return (
-    <SignBand style={[styles.band, { paddingTop: insets.top + Spacing.two }]}>
+    <SignBand colors={theme.gradient} style={[styles.band, { paddingTop: insets.top + Spacing.two }]}>
       <View style={styles.titleRow}>
         {onPressTitle ? (
           <Pressable
