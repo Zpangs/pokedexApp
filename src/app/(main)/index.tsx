@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { type SQLiteDatabase, useSQLiteContext } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { DexRow } from '@/components/dex/dex-row';
@@ -11,6 +11,7 @@ import { SearchBand } from '@/components/dex/search-band';
 import { Notice } from '@/components/notice';
 import { MenuButtonInset, Spacing } from '@/constants/theme';
 import { TypeColors } from '@/constants/types';
+import { toggleCaught, useCaught } from '@/db/caught';
 import {
   type DexEntry,
   type DexGeneration,
@@ -72,6 +73,12 @@ function DexScreenContent() {
   // Type identifiers, in the order picked; Pokémon must have all of them
   const [types, setTypes] = useState<string[]>([]);
   const [generation, setGeneration] = useState<number | null>(null);
+  const [missingOnly, setMissingOnly] = useState(false);
+  const caught = useCaught(selectedId);
+  const onToggleCaught = useCallback(
+    (speciesId: number) => toggleCaught(selectedId, speciesId),
+    [selectedId]
+  );
 
   const toggleType = (identifier: string) =>
     setTypes((current) =>
@@ -103,7 +110,12 @@ function DexScreenContent() {
   const regional = selectedId !== NATIONAL_DEX_ID;
   // A generation filter only means something on the National Dex
   const generationFilter = dex?.generations ? generation : null;
-  const filtered = types.length > 0 || generationFilter !== null;
+  const filtered = types.length > 0 || generationFilter !== null || missingOnly;
+  // Species can appear twice in a dex (Hisui lists some forms apart); count each once
+  const caughtCount = useMemo(
+    () => new Set((dex?.entries ?? []).filter((e) => caught.has(e.number)).map((e) => e.number)).size,
+    [dex, caught]
+  );
 
   // The types this dex has, in the usual type order
   const dexTypes = useMemo(() => {
@@ -121,11 +133,15 @@ function DexScreenContent() {
   const rowHeight = Math.max(72, Math.ceil(40 * scale + 28));
   const signHeight = Math.max(44, Math.ceil(22 * scale + 22));
 
+  // Caught only changes the list while hiding caught ones; otherwise rows read it themselves
+  const hideCaught = missingOnly ? caught : null;
+
   const { items, stickyIndices, offsets, shown } = useMemo(() => {
     const words = queryWords(deferredQuery);
-    const searching = words.length > 0 || types.length > 0;
+    const searching = words.length > 0 || types.length > 0 || hideCaught !== null;
     const matches = (e: DexEntry) =>
       (words.length === 0 || matchesQuery(e, words)) &&
+      (!hideCaught || !hideCaught.has(e.number)) &&
       types.every((t) => e.types.some((et) => et.identifier === t));
     const items: Item[] = [];
     const stickyIndices: number[] = [];
@@ -163,7 +179,7 @@ function DexScreenContent() {
       y += item.kind === 'generation' ? signHeight : rowHeight;
     }
     return { items, stickyIndices, offsets, shown };
-  }, [dex, deferredQuery, types, generationFilter, rowHeight, signHeight]);
+  }, [dex, deferredQuery, types, generationFilter, hideCaught, rowHeight, signHeight]);
 
   return (
     <View style={[styles.screen, { backgroundColor: theme.background }]}>
@@ -176,7 +192,8 @@ function DexScreenContent() {
         onChangeQuery={setQuery}
         total={dex?.entries.length}
         shown={shown}
-        filtered={filtered}>
+        filtered={filtered}
+        caught={caughtCount}>
         {dex ? (
           <FilterChips
             types={dexTypes}
@@ -185,9 +202,12 @@ function DexScreenContent() {
             generations={dex.generations}
             selectedGeneration={generationFilter}
             onSelectGeneration={setGeneration}
+            missingOnly={missingOnly}
+            onToggleMissing={() => setMissingOnly((m) => !m)}
             onClear={() => {
               setTypes([]);
               setGeneration(null);
+              setMissingOnly(false);
             }}
           />
         ) : null}
@@ -219,6 +239,8 @@ function DexScreenContent() {
           key={stickyIndices.join(',')}
           removeClippedSubviews={false}
           data={items}
+          // Re-render rows when a Pokémon is ticked
+          extraData={caught}
           keyExtractor={(item) => item.key}
           renderItem={({ item }) =>
             item.kind === 'generation' ? (
@@ -233,6 +255,8 @@ function DexScreenContent() {
                 height={rowHeight}
                 fontScale={fontScale}
                 digits={regional ? 3 : 4}
+                caught={caught.has(item.entry.number)}
+                onToggleCaught={onToggleCaught}
               />
             )
           }

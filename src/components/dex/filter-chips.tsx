@@ -17,6 +17,9 @@ type Props = {
   generations: DexGeneration[] | null;
   selectedGeneration: number | null;
   onSelectGeneration: (id: number | null) => void;
+  /** Show only the Pokémon not caught yet. */
+  missingOnly: boolean;
+  onToggleMissing: () => void;
   onClear: () => void;
 };
 
@@ -28,10 +31,12 @@ export function FilterChips({
   generations,
   selectedGeneration,
   onSelectGeneration,
+  missingOnly,
+  onToggleMissing,
   onClear,
 }: Props) {
   const theme = useSignTheme();
-  const active = selectedTypes.length > 0 || selectedGeneration !== null;
+  const active = selectedTypes.length > 0 || selectedGeneration !== null || missingOnly;
 
   return (
     <>
@@ -63,6 +68,22 @@ export function FilterChips({
             tintColor={theme.onPanel}
           />
           <Text style={[styles.label, { color: theme.onPanel }]}>Clear</Text>
+        </Pressable>
+        <Pressable
+          onPress={onToggleMissing}
+          style={({ pressed }) => [
+            styles.chip,
+            { borderColor: theme.onSign },
+            missingOnly && { backgroundColor: theme.field, borderColor: theme.field },
+            pressed && styles.pressed,
+          ]}
+          hitSlop={{ top: 4, bottom: 4 }}
+          accessibilityRole="button"
+          accessibilityState={{ selected: missingOnly }}
+          accessibilityLabel="Not caught yet">
+          <Text style={[styles.label, { color: missingOnly ? theme.onPanel : theme.onSign }]}>
+            Not caught
+          </Text>
         </Pressable>
         {types.map((t) => {
           const on = selectedTypes.includes(t.identifier);

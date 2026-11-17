@@ -119,6 +119,23 @@ export async function loadDexVersionGroups(db: SQLiteDatabase, pokedexId: number
   return rows.filter((r) => !HIDDEN_VERSION_GROUPS.has(r.identifier)).map((r) => r.id);
 }
 
+/** The dex's name ("National", "Paldea") when the species is in it, otherwise null. */
+export async function dexNameIfListed(
+  db: SQLiteDatabase,
+  pokedexId: number,
+  speciesId: number
+): Promise<string | null> {
+  const row = await db.getFirstAsync<{ name: string }>(
+    `SELECT pr.name FROM pokemon_dex_numbers d
+     JOIN pokedex_prose pr ON pr.pokedex_id = d.pokedex_id
+     WHERE d.pokedex_id = ? AND d.species_id = ?`,
+    pokedexId,
+    speciesId
+  );
+  if (!row) return null;
+  return pokedexId === NATIONAL_DEX_ID ? 'National' : row.name;
+}
+
 type EntryRow = {
   dex_number: number;
   number: number;

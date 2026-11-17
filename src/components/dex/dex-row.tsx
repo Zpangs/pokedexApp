@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { CaughtButton } from '@/components/dex/caught-button';
 import { TypeBadge } from '@/components/type-badge';
 import { Font, Spacing } from '@/constants/theme';
 import { type DexEntry, formatDexNumber } from '@/db/queries/national-dex';
@@ -18,10 +19,20 @@ type Props = {
   fontScale: number;
   /** 4 for National numbers, 3 for regional ones. */
   digits?: number;
+  caught: boolean;
+  /** Called with the species (National Dex number). Stable, so rows stay memoized. */
+  onToggleCaught: (speciesId: number) => void;
 };
 
 /** One Pokémon: big dex number, sprite, then the name over its type badges. Opens its page. */
-export const DexRow = memo(function DexRow({ entry, height, fontScale, digits = 4 }: Props) {
+export const DexRow = memo(function DexRow({
+  entry,
+  height,
+  fontScale,
+  digits = 4,
+  caught,
+  onToggleCaught,
+}: Props) {
   const theme = useTheme();
   const types = entry.types.map((t) => t.name).join(' and ');
   // A regional form (Alolan Raichu) opens on that form; default forms share the species id
@@ -40,7 +51,7 @@ export const DexRow = memo(function DexRow({ entry, height, fontScale, digits = 
       ]}
       android_ripple={{ color: theme.backgroundSelected }}
       accessibilityRole="button"
-      accessibilityLabel={`Number ${entry.dexNumber}, ${entry.name}, ${types} type`}>
+      accessibilityLabel={`Number ${entry.dexNumber}, ${entry.name}, ${types} type${caught ? ', caught' : ''}`}>
       <Text
         style={[
           styles.number,
@@ -70,6 +81,11 @@ export const DexRow = memo(function DexRow({ entry, height, fontScale, digits = 
           ))}
         </View>
       </View>
+      <CaughtButton
+        caught={caught}
+        name={entry.name}
+        onToggle={() => onToggleCaught(entry.number)}
+      />
     </Pressable>
   );
 });

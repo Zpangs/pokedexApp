@@ -25,6 +25,8 @@ type Props = {
   shown: number;
   /** Filters narrow the list like a search does, so the count shows "12 of 1,025". */
   filtered?: boolean;
+  /** How many of the dex are caught; shown when not searching, once any are. */
+  caught?: number;
   /** Under the search field, e.g. filter chips. */
   children?: ReactNode;
 };
@@ -42,6 +44,7 @@ export function SearchBand({
   total,
   shown,
   filtered = false,
+  caught = 0,
   children,
 }: Props) {
   const theme = useSignTheme();
@@ -77,7 +80,9 @@ export function SearchBand({
           <Text style={[styles.count, { color: theme.onSign }]} accessibilityLiveRegion="polite">
             {searching || filtered
               ? `${shown.toLocaleString()} of ${total.toLocaleString()}`
-              : `${total.toLocaleString()} ${noun}`}
+              : caught > 0
+                ? `${caught.toLocaleString()} of ${total.toLocaleString()} caught`
+                : `${total.toLocaleString()} ${noun}`}
           </Text>
         )}
       </View>

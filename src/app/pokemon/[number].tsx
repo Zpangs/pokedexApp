@@ -22,7 +22,8 @@ import {
 } from '@/components/pokemon/sections';
 import { Font, Spacing } from '@/constants/theme';
 import { formatDexNumber, plural } from '@/db/queries/national-dex';
-import { loadDexVersionGroups } from '@/db/queries/pokedexes';
+import { toggleCaught, useCaught } from '@/db/caught';
+import { dexNameIfListed, loadDexVersionGroups } from '@/db/queries/pokedexes';
 import {
   type Encounter,
   type EvolutionStage,
@@ -75,6 +76,20 @@ function PokemonScreenContent() {
   const [game, setGame] = useState<number | null>(null);
   // The selected dex's games, newest first: they open the Moves section and lead Where to find
   const [dexGames, setDexGames] = useState<number[]>([]);
+  // The selected dex's name when this Pokémon is in it, for the caught toggle
+  const [dexName, setDexName] = useState<string | null>(null);
+  const caughtSet = useCaught(selectedDex);
+
+  useEffect(() => {
+    let live = true;
+    dexNameIfListed(db, selectedDex, number).then(
+      (n) => live && setDexName(n),
+      () => {}
+    );
+    return () => {
+      live = false;
+    };
+  }, [db, selectedDex, number]);
   const [moves, setMoves] = useState<LearnedMove[] | null>(null);
   const [bandHeight, setBandHeight] = useState(0);
   const [collapsed, setCollapsed] = useState(false);
@@ -190,6 +205,15 @@ function PokemonScreenContent() {
             pokemonId={pokemonId}
             varieties={species?.varieties ?? []}
             onSelectVariety={setPokemonId}
+            caught={
+              dexName
+                ? {
+                    dexName,
+                    caught: caughtSet.has(number),
+                    onToggle: () => toggleCaught(selectedDex, number),
+                  }
+                : null
+            }
           />
         </View>
 

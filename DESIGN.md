@@ -308,6 +308,9 @@ The red-to-blue gradient band that names the screen. It runs under the status ba
 ### Search field
 A square sign-black field set into the gradient band, at least 52dp tall, with a white 24dp search pictogram, white medium 17dp input text, a panel-grey placeholder ("Name, number or type") and a panel-red cursor. A 48dp clear button appears while there is a query.
 
+### Caught mark
+At the end of every Dex row, a 48dp target holding a 28dp ring: textSecondary outline when not caught, filled with the dex's solid sign color and a white tick when caught. Checklists are per dex (a Paldea run doesn't tick Kanto) and keyed by species. The band's count reads "3 of 1,025 caught" once any are, and a "Not caught" chip in the filter row hides the caught ones. A Pokémon's page has the same toggle as an outline pill on the identity band ("Mark caught · Kanto Dex"), filled sign black when caught, shown only when the Pokémon is in the selected dex.
+
 ### Filter chips
 Under the Dex search field, set into the band: a row of the dex's types (in type order) and, on the National Dex only, a row of generations. Unselected chips are a 1.5dp white outline with white bold 14dp text; a selected type fills with its type color and a 2dp white edge (the Band Outline Rule), and a selected generation fills sign black. Up to two types (a Pokémon must have both; a third replaces the first) and one generation. A sign-black Clear chip leads the type row and stays put at 40% opacity while nothing is on, so chips never shift under the thumb. Filters combine with the search text, and the count reads "8 of 1,025".
 
