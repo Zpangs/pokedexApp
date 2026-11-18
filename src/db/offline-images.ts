@@ -23,8 +23,16 @@ const REMOTE_PATH: Record<Kind, string> = {
 };
 const PACK_KINDS: Record<Pack, Kind[]> = { small: ['sprite', 'item'], artwork: ['artwork'] };
 
-const root = new Directory(Paths.document, 'images');
-const rootUri = root.uri.replace(/\/$/, '');
+// Made on first use, not at import: the web build renders routes on the server, where the
+// document directory doesn't exist and building it throws.
+let rootDir: Directory | null = null;
+function root() {
+  return (rootDir ??= new Directory(Paths.document, 'images'));
+}
+let rootUriCache: string | null = null;
+function rootUri() {
+  return (rootUriCache ??= root().uri.replace(/\/$/, ''));
+}
 
 export function remoteUrl(kind: Kind, name: string | number) {
   return `${REMOTE}/${REMOTE_PATH[kind]}/${name}.png`;
@@ -74,7 +82,7 @@ function packOf(kind: Kind): Pack {
 /** The image's on-device copy when its pack is installed, otherwise its web address. */
 export function imageUri(kind: Kind, name: string | number) {
   const set = missing[packOf(kind)];
-  if (set && !set.has(`${kind}/${name}`)) return `${rootUri}/${kind}/${name}.png`;
+  if (set && !set.has(`${kind}/${name}`)) return `${rootUri()}/${kind}/${name}.png`;
   return remoteUrl(kind, name);
 }
 
@@ -118,7 +126,7 @@ async function imageNames(db: SQLiteDatabase, kind: Kind): Promise<string[]> {
  * one bad image can't stop a pack.
  */
 async function fetchImage(kind: Kind, name: string): Promise<number | null> {
-  const target = new File(root, kind, `${name}.png`);
+  const target = new File(root(), kind, `${name}.png`);
   try {
     if (target.exists && target.size > 0) return target.size;
     const file = await File.downloadFileAsync(remoteUrl(kind, name), target, { idempotent: true });
@@ -126,7 +134,7 @@ async function fetchImage(kind: Kind, name: string): Promise<number | null> {
   } catch {
     // Android streams into the target, so a failed download can leave part of a file behind
     try {
-      const leftover = new File(root, kind, `${name}.png`);
+      const leftover = new File(root(), kind, `${name}.png`);
       if (leftover.exists) leftover.delete();
     } catch {
       // Nothing to clean up
@@ -145,7 +153,7 @@ export async function downloadPack(db: SQLiteDatabase, pack: Pack) {
 
   const jobs: { kind: Kind; name: string }[] = [];
   for (const kind of PACK_KINDS[pack]) {
-    new Directory(root, kind).create({ intermediates: true, idempotent: true });
+    new Directory(root(), kind).create({ intermediates: true, idempotent: true });
     for (const name of await imageNames(db, kind)) jobs.push({ kind, name });
   }
 
@@ -200,7 +208,7 @@ export function deletePack(pack: Pack) {
   const { [pack]: _removed, ...rest } = saved;
   save(rest);
   for (const kind of PACK_KINDS[pack]) {
-    const dir = new Directory(root, kind);
+    const dir = new Directory(root(), kind);
     if (dir.exists) dir.delete();
   }
 }
